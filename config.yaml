@@ -2,7 +2,7 @@ baseurl: https://example.com
 languageCode: en-us
 theme: "hugo-theme-stack"
 paginate: 5
-title: Example Site
+title: wutao's blog
 
 # Change it to your Disqus shortname before using
 disqusShortname: hugo-theme-stack
@@ -35,7 +35,7 @@ params:
         subtitle: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
         avatar:
             local: true
-            src: img/avatar.png
+            src: img/paimen.jpg
 
     article:
         math: false
