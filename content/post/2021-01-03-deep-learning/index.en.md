@@ -1,5 +1,5 @@
 ---
-title: deep_learning
+title: 深度学习入门
 author: wutao
 date: '2021-01-03'
 slug: deep-learning
