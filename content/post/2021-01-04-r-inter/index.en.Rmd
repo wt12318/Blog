@@ -1,0 +1,64 @@
+---
+title: R的内部机制
+author: wutao
+date: '2021-01-04'
+slug: r-inter
+categories:
+  - R
+tags:
+  - notes
+image: "77_cover_m.jpg"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+本章主要是学习四个方面：
+
+- 惰性求值
+- 复制修改机制
+- 词法作用域
+- 环境
+
+## 惰性求值
+
+惰性求值指的是：在函数调用时，参数的值只在用到的时侯才会被调用/执行
+
+比如下面这个函数：
+
+```{r example1,error=TRUE}
+test0 <- function(x,y){
+  if(x > 0){
+    x
+  }else{
+    y
+  }
+}
+
+test0(1,stop("Stop nrow"))
+test0(-1,stop("Stop nrow"))
+```
+可以看到当调用`test0(1,stop("Stop nrow"))`并不会报错，因为这种情况下函数不会运行y(因为不需要y的值)；而在调用`test0(-1,stop("Stop nrow"))`的时候会发生报错是因为输入x是负数，因此会进入`else`运行y，而y的值是表达式`stop("Stop nrow")`所以会报错
+
+在这一节中还有一个巧妙的用法:使用`stop`和`switch`来控制函数的输入:
+
+```{r stop_switch,error=TRUE}
+check_input <- function(x){
+  switch(x,
+         y = message("yes"),
+         n = message("no"),
+         stop("Invalid input")
+  )
+}
+
+check_input("y")
+check_input("n")
+check_input("a")
+```
+
+
+
+
+
+

@@ -1,0 +1,55 @@
+---
+title: R的内部机制
+author: wutao
+date: '2021-01-04'
+slug: r-inter
+categories:
+  - R
+tags:
+  - notes
+image: "77_cover_m.jpg"
+---
+
+<script src="{{< blogdown/postref >}}index.en_files/header-attrs/header-attrs.js"></script>
+
+
+<p>本章主要是学习四个方面：</p>
+<ul>
+<li>惰性求值</li>
+<li>复制修改机制</li>
+<li>词法作用域</li>
+<li>环境</li>
+</ul>
+<div id="惰性求值" class="section level2">
+<h2>惰性求值</h2>
+<p>惰性求值指的是：在函数调用时，参数的值只在用到的时侯才会被调用/执行</p>
+<p>比如下面这个函数：</p>
+<pre class="r"><code>test0 &lt;- function(x,y){
+  if(x &gt; 0){
+    x
+  }else{
+    y
+  }
+}
+
+test0(1,stop(&quot;Stop nrow&quot;))
+## [1] 1
+test0(-1,stop(&quot;Stop nrow&quot;))
+## Error in test0(-1, stop(&quot;Stop nrow&quot;)): Stop nrow</code></pre>
+<p>可以看到当调用<code>test0(1,stop("Stop nrow"))</code>并不会报错，因为这种情况下函数不会运行y(因为不需要y的值)；而在调用<code>test0(-1,stop("Stop nrow"))</code>的时候会发生报错是因为输入x是负数，因此会进入<code>else</code>运行y，而y的值是表达式<code>stop("Stop nrow")</code>所以会报错</p>
+<p>在这一节中还有一个巧妙的用法:使用<code>stop</code>和<code>switch</code>来控制函数的输入:</p>
+<pre class="r"><code>check_input &lt;- function(x){
+  switch(x,
+         y = message(&quot;yes&quot;),
+         n = message(&quot;no&quot;),
+         stop(&quot;Invalid input&quot;)
+  )
+}
+
+check_input(&quot;y&quot;)
+## yes
+check_input(&quot;n&quot;)
+## no
+check_input(&quot;a&quot;)
+## Error in check_input(&quot;a&quot;): Invalid input</code></pre>
+</div>
