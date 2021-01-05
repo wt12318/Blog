@@ -1,0 +1,67 @@
+---
+title: 按照列名进行group_by
+author: wutao
+date: '2021-01-05'
+slug: group-by-colnames
+categories:
+  - R
+tags:
+  - R
+  - skills
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE,class.source="bg-success")
+```
+
+现在有一个数据框`dt`:
+```{r ex1}
+dt <- data.frame(
+  x = c(1,2,3),
+  y = c(2,3,4),
+  z = c("a","a","b")
+)
+dt
+```
+
+想要依据`z`列分组并计算`x`,`y`列的均值：
+```{r ex2,message=FALSE}
+library(dplyr)
+dt %>% 
+  group_by(z) %>% 
+  summarise(mean_x=mean(x),mean_y=mean(y))
+```
+但是如果传入的是字符就会出现我们不想要的结果：
+```{r ex3,error=FALSE}
+dt %>% 
+  group_by("z") %>% 
+  summarise(mean_x=mean(x),mean_y=mean(y))
+
+```
+这里实际上是创建了一个新的变量`z`并且他的值也是`z`，然后计算了x和y列的均值\   
+这种情况下可以使用`group_by_at`来选择变量
+
+```{r ex4}
+dt %>% 
+  group_by_at("z") %>% 
+  summarise(mean_x=mean(x),mean_y=mean(y))
+
+```
+
+在`dplyr`的最新版本中(1.0+)有新的函数`across`也可以做同样的事:
+```{r ex5}
+dt %>% 
+  group_by(across("z")) %>% 
+  summarise(mean_x=mean(x),mean_y=mean(y))
+
+```
+
+另外我们也可以使用`eval`加`parse`来将字符解析为对象：
+```{r ex6}
+dt %>% 
+  group_by(eval(parse(text = "z"))) %>% 
+  summarise(mean_x=mean(x),mean_y=mean(y))
+
+```
+
+

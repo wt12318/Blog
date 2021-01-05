@@ -1,12 +1,70 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on Example Site</title>
+    <title>Posts on </title>
     <link>https://example.com/post/</link>
-    <description>Recent content in Posts on Example Site</description>
+    <description>Recent content in Posts on </description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 23 Jul 2015 21:13:14 -0500</lastBuildDate><atom:link href="https://example.com/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 04 Jan 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://example.com/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>R的内部机制</title>
+      <link>https://example.com/p/r-inter/</link>
+      <pubDate>Mon, 04 Jan 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://example.com/p/r-inter/</guid>
+      <description>本章主要是学习四个方面：
+惰性求值复制修改机制词法作用域环境惰性求值惰性求值指的是：在函数调用时，参数的值只在用到的时侯才会被调用/执行
+比如下面这个函数：
+test0 &amp;lt;- function(x,y){if(x &amp;gt; 0){x}else{y}}test0(1,stop(&amp;quot;Stop nrow&amp;quot;))## [1] 1test0(-1,stop(&amp;quot;Stop nrow&amp;quot;))## Error in test0(-1, stop(&amp;quot;Stop nrow&amp;quot;)): Stop nrow可以看到当调用test0(1,stop(&#34;Stop nrow&#34;))并不会报错，因为这种情况下函数不会运行y(因为不需要y的值)；而在调用test0(-1,stop(&#34;Stop nrow&#34;))的时候会发生报错是因为输入x是负数，因此会进入else运行y，而y的值是表达式stop(&#34;Stop nrow&#34;)所以会报错
+在这一节中还有一个巧妙的用法:使用stop和switch来控制函数的输入:
+check_input &amp;lt;- function(x){switch(x,y = message(&amp;quot;yes&amp;quot;),n = message(&amp;quot;no&amp;quot;),stop(&amp;quot;Invalid input&amp;quot;))}check_input(&amp;quot;y&amp;quot;)## yescheck_input(&amp;quot;n&amp;quot;)## nocheck_input(&amp;quot;a&amp;quot;)## Error in check_input(&amp;quot;a&amp;quot;): Invalid input</description>
+    </item>
+    
+    <item>
+      <title>switch函数用法</title>
+      <link>https://example.com/p/switch/</link>
+      <pubDate>Mon, 04 Jan 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://example.com/p/switch/</guid>
+      <description>switch的基本用法为switch (expression, list) 第一个参数是表达式，第二个参数是列表；基于表达式的值返回列表中相应元素(按照名称)的值
+来看一些具体的例子：
+如果expression的结果是整数，那么会按照位置返回值 如果expression的结果是字符，那么会按照其后参数构成的列表中元素的名称返回相应的值
+switch(1,x=1,y=2)## [1] 1centre &amp;lt;- function(x, type) {switch(type,mean = mean(x),median = median(x),trimmed = mean(x, trim = .1))}centre(c(1,2,3),&amp;quot;mean&amp;quot;)## [1] 2对于数字的情况，如果输入是负数或者超出范围，不会报错，返回的是NULL(print后才可见) 对于字符，如果输入没有匹配的名称也会返回NULL，这个时候可以在list的最后加上没有名称的值捕获其他的输入：
+for(i in c(-1:3, 9)) print(switch(i, 1, 2 , 3, 4))## NULL## NULL## [1] 1## [1] 2## [1] 3## NULLprint(switch(&amp;quot;a&amp;quot;,c=1,b=2))## NULLprint(switch(&amp;quot;a&amp;quot;,c=1,b=2,3))## [1] 3</description>
+    </item>
+    
+    <item>
+      <title>深度学习入门</title>
+      <link>https://example.com/p/deep-learning/</link>
+      <pubDate>Sun, 03 Jan 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://example.com/p/deep-learning/</guid>
+      <description>主要内容来自深度学习入门：
+感知机 感知机也可以称为人工神经元，是神经网络的基础
+感知机接受多个信号(x1,x2)，输出一个信号(y), w1/w2是权重，圆圈就代表神经元
+输入信号被传递到神经元的时候会被乘上权重(w1x1、w2x2)，神经元会计算输入的信号总和，只有这个总和超过某个阈值才会输出1，这个状态就叫做神经元的激活，这个过程用函数表示如下( $\theta$表示阈值)：
+也可以对上式进行形式上的转化(将$\theta$移到左边)：
+这里面b叫做偏置
+可以看出w1和w2是控制输入信号的重要性的参数，而偏置b是调整神经元被激活的容易程度的参数
+我们再进一步简化上面函数的形式，引入一个新的函数$h(x)$，将上面的函数改写：
+函数$h(x)$对输入信号的总和进行转化，转化后的值就是输出y
+这个函数$h(x)$就是激活函数
+我们可以将上面的感知机进行细化，展示出激活函数的运算过程：
+$a=w_1x_1+w_2x_2+b$, $y=h(a)$
+a计算计算加权输入信号和偏置的总和，用h(x)函数将a转换为输出y
+这样的激活函数称为阶跃函数，超过某个阈值就会改变函数的输出，函数的图像呈阶梯状：
+神经网络 神经网络可以看作是多层感知机，并且使用的激活函数不再是阶跃函数了
+上图展示的是一个简单的3层(从0开始计算)神经网络
+先来看一下常用的激活函数：
+sigmoid函数 sigmoid函数的表示为：
+可以通过python简单的实现：
+import numpy as np import matplotlib.pylab as plt ###sigmoid function def sigmoid(x): return 1 / (1 + np.exp(-x)) X = np.arange(-5.0, 5.0, 0.1) Y = sigmoid(X) plt.plot(X, Y) plt.ylim(-0.1, 1.1) plt.show() sigmoid函数和阶跃函数的主要区别在于其是平滑的曲线，连续可导
+ReLU函数 ReLU全称为Rectified Linear Unit，线性整流函数
+ReLU函数在输入大于0时，直接输出该值；在输入小于等于0时，输出0:
+##relu def relu(x): return np.maximum(0, x) x = np.</description>
+    </item>
+    
     <item>
       <title>Hello R Markdown</title>
       <link>https://example.com/p/hello-r-markdown/</link>
