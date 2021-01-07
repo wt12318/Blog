@@ -88,6 +88,18 @@ git push origin master
 ![image-20210107195413647](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210107195413647.png)
 ![image-20210107195518614](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210107195518614.png)
 
+总结一下，主要有以下几个步骤：
+
+- 在https://themes.gohugo.io/选择想要的模板
+- 在Rstudio中创建新项目(website using blogdown)
+- 运行Rstudio的Addin(Serve Site)
+- 运行Rstudio的Addin(New Post)新建博客，开始写作
+- 部署博客：
+  - 创建Github仓库，并将本地内容与仓库连接
+  - 将Github的内容部署到Netlify上
+- 每次写完博客只需要将内容push到Github上，Netlify就会自动更新
+
+
 ### 绑定域名
 通过上面的步骤，Netlify提供的域名都是有后缀的(.netlify.app)，我们也可以绑定自己的域名，具体可以参考这篇文章[Netlify搭建个人博客设置域名](https://blog.csdn.net/mqdxiaoxiao/article/details/96365253)
 
