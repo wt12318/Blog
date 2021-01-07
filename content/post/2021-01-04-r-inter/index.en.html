@@ -13,6 +13,7 @@ image: "77_cover_m.jpg"
 <script src="{{< blogdown/postref >}}index.en_files/header-attrs/header-attrs.js"></script>
 
 
+<p>Last compiled on 07 一月, 2021</p>
 <p>本章主要是学习四个方面：</p>
 <ul>
 <li>惰性求值</li>
@@ -52,4 +53,35 @@ check_input(&quot;n&quot;)
 ## no
 check_input(&quot;a&quot;)
 ## Error in check_input(&quot;a&quot;): Invalid input</code></pre>
+</div>
+<div id="复制修改机制" class="section level2">
+<h2>复制——修改机制</h2>
+<p>复制修改机制指的是：当有多个变量指向同一个对象，那么修改一个变量(包括值和属性)就会生成该对象的一个副本</p>
+<p>我们可以看一个例子：</p>
+<pre class="r"><code>x1 &lt;- c(1,2,3)
+x2 &lt;- x1
+
+##使用tracemem可以追踪变量的内存地址
+tracemem(x1)
+## [1] &quot;&lt;0000000015BDDEE8&gt;&quot;
+tracemem(x2)
+## [1] &quot;&lt;0000000015BDDEE8&gt;&quot;
+
+x1[1] &lt;- 0
+## tracemem[0x0000000015bddee8 -&gt; 0x00000000184f2c50]: eval eval withVisible withCallingHandlers handle timing_fn evaluate_call &lt;Anonymous&gt; evaluate in_dir block_exec call_block process_group.block process_group withCallingHandlers process_file &lt;Anonymous&gt; &lt;Anonymous&gt; &lt;Anonymous&gt; do.call eval eval eval eval eval.parent local</code></pre>
+<p>可以看到在赋值操作中变量所指向的内存地址是一样的，但是在改变其中一个变量的值的时候，该变量的内存地址发生了变化，也就是说修改操作会生成一个副本，然后在该副本上进行修改</p>
+<p>对于函数的参数也是这样，当我们传一个变量给函数的参数时，就相当于该变量和函数参数所表示的变量都指向我们传入的数据，所以在函数内部进行修改时并不会修改传入的变量:</p>
+<pre class="r"><code>modify &lt;- function(x){
+  x[1] &lt;- 2
+  x
+}
+
+v1 &lt;- c(1,2,3)
+modify(v1)
+## [1] 2 2 3
+v1
+## [1] 1 2 3</code></pre>
+</div>
+<div id="词法作用域" class="section level2">
+<h2>词法作用域</h2>
 </div>
