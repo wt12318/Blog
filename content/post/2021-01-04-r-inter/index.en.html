@@ -13,7 +13,7 @@ image: "77_cover_m.jpg"
 <script src="{{< blogdown/postref >}}index.en_files/header-attrs/header-attrs.js"></script>
 
 
-<p>Last compiled on 07 一月, 2021</p>
+<p>Last compiled on 11 一月, 2021</p>
 <p>本章主要是学习四个方面：</p>
 <ul>
 <li>惰性求值</li>
@@ -63,14 +63,14 @@ x2 &lt;- x1
 
 ##使用tracemem可以追踪变量的内存地址
 tracemem(x1)
-## [1] &quot;&lt;0000000015BDDEE8&gt;&quot;
+## [1] &quot;&lt;00000000159C9790&gt;&quot;
 tracemem(x2)
-## [1] &quot;&lt;0000000015BDDEE8&gt;&quot;
+## [1] &quot;&lt;00000000159C9790&gt;&quot;
 
 x1[1] &lt;- 0
-## tracemem[0x0000000015bddee8 -&gt; 0x00000000184f2c50]: eval eval withVisible withCallingHandlers handle timing_fn evaluate_call &lt;Anonymous&gt; evaluate in_dir block_exec call_block process_group.block process_group withCallingHandlers process_file &lt;Anonymous&gt; &lt;Anonymous&gt; &lt;Anonymous&gt; do.call eval eval eval eval eval.parent local</code></pre>
+## tracemem[0x00000000159c9790 -&gt; 0x00000000176a9650]: eval eval withVisible withCallingHandlers handle timing_fn evaluate_call &lt;Anonymous&gt; evaluate in_dir block_exec call_block process_group.block process_group withCallingHandlers process_file &lt;Anonymous&gt; &lt;Anonymous&gt; &lt;Anonymous&gt; do.call eval eval eval eval eval.parent local</code></pre>
 <p>可以看到在赋值操作中变量所指向的内存地址是一样的，但是在改变其中一个变量的值的时候，该变量的内存地址发生了变化，也就是说修改操作会生成一个副本，然后在该副本上进行修改</p>
-<p>对于函数的参数也是这样，当我们传一个变量给函数的参数时，就相当于该变量和函数参数所表示的变量都指向我们传入的数据，所以在函数内部进行修改时并不会修改传入的变量:</p>
+<p>对于函数的参数也是这样，当我们传一个变量给函数的参数时，就相当于该变量和函数参数所表示的变量都指向我们传入的数据，所以在函数内部进行修改时并不会修改传入的变量，而是将该变量的值复制后再进行修改:</p>
 <pre class="r"><code>modify &lt;- function(x){
   x[1] &lt;- 2
   x
@@ -84,4 +84,65 @@ v1
 </div>
 <div id="词法作用域" class="section level2">
 <h2>词法作用域</h2>
+<p>本节中有几个知识点：</p>
+<ol style="list-style-type: decimal">
+<li>函数只有在被调用的时候才寻找变量：</li>
+</ol>
+<pre class="r"><code>##定义函数
+fun1 &lt;- function(x){
+  c(a,x,b)
+}
+#现在并没有定义a和b,但是创建函数时不会报错
+
+fun1(1)
+## Error in fun1(1): 找不到对象&#39;a&#39;
+##由于调用函数时找不到相应的变量所以报错
+
+a &lt;- b &lt;- 1
+fun1(1)
+## [1] 1 1 1</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>当函数被调用时，先会在函数内部搜索变量，如果在内部找不到相应的变量，就会在自己被定义的地方(所在的域或者环境)而不是被调用的地方搜索相应的变量—-<strong>词法作用域</strong></li>
+</ol>
+<pre class="r"><code>f1 &lt;- function(x){
+  x + p 
+}
+
+g1 &lt;- function(x){
+  p &lt;- 1 
+  f1(x)
+}
+
+g1(0)
+## Error in f1(x): 找不到对象&#39;p&#39;
+##在g1内部调用f1，f1先在其内部找p，找不到；接着f1到其被定义的域/环境中找p，也找不到(因为p是在g1内部被定义的)，所以会报错
+
+p &lt;- 1
+g1(0)
+## [1] 1
+##在g1内部调用f1，f1先在其内部找p，找不到；接着f1到其被定义的域/环境中找p,这时就可以找到了</code></pre>
+<p>接下来看一个有意思的例子：</p>
+<pre class="r"><code>f1 &lt;- function(x){
+  p &lt;- 1
+  q &lt;- 2
+  cat(sprintf(&quot;1. [f1] p: %d, q: %d\n&quot;,p,q))
+  f2 &lt;- function(x){
+    p &lt;- 3
+    cat(sprintf(&quot;2. [f2] p: %d, q: %d\n&quot;,p,q))
+    c(x=x, p=p, q=q)
+  }
+  cat(sprintf(&quot;3. [f1] p: %d, q: %d&quot;,p,q))
+  f2(x)
+}
+
+f1(0)
+## 1. [f1] p: 1, q: 2
+## 3. [f1] p: 1, q: 22. [f2] p: 3, q: 2
+## x p q 
+## 0 3 2
+
+##注意运行的顺序和展示的值</code></pre>
+</div>
+<div id="环境的工作方式" class="section level2">
+<h2>环境的工作方式</h2>
 </div>
