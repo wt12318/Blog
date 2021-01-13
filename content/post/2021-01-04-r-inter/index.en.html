@@ -13,7 +13,7 @@ image: "77_cover_m.jpg"
 <script src="{{< blogdown/postref >}}index.en_files/header-attrs/header-attrs.js"></script>
 
 
-<p>Last compiled on 12 一月, 2021</p>
+<p>Last compiled on 13 一月, 2021</p>
 <p>本章主要是学习四个方面：</p>
 <ul>
 <li>惰性求值</li>
@@ -63,12 +63,12 @@ x2 &lt;- x1
 
 ##使用tracemem可以追踪变量的内存地址
 tracemem(x1)
-&gt;&gt; [1] &quot;&lt;000000001849D8C8&gt;&quot;
+&gt;&gt; [1] &quot;&lt;000000001266DCD0&gt;&quot;
 tracemem(x2)
-&gt;&gt; [1] &quot;&lt;000000001849D8C8&gt;&quot;
+&gt;&gt; [1] &quot;&lt;000000001266DCD0&gt;&quot;
 
 x1[1] &lt;- 0
-&gt;&gt; tracemem[0x000000001849d8c8 -&gt; 0x0000000018546888]: eval eval withVisible withCallingHandlers handle timing_fn evaluate_call &lt;Anonymous&gt; evaluate in_dir block_exec call_block process_group.block process_group withCallingHandlers process_file &lt;Anonymous&gt; &lt;Anonymous&gt; &lt;Anonymous&gt; do.call eval eval eval eval eval.parent local</code></pre>
+&gt;&gt; tracemem[0x000000001266dcd0 -&gt; 0x0000000012714d70]: eval eval withVisible withCallingHandlers handle timing_fn evaluate_call &lt;Anonymous&gt; evaluate in_dir block_exec call_block process_group.block process_group withCallingHandlers process_file &lt;Anonymous&gt; &lt;Anonymous&gt; &lt;Anonymous&gt; do.call eval eval eval eval eval.parent local</code></pre>
 <p>可以看到在赋值操作中变量所指向的内存地址是一样的，但是在改变其中一个变量的值的时候，该变量的内存地址发生了变化，也就是说修改操作会生成一个副本，然后在该副本上进行修改</p>
 <p>对于函数的参数也是这样，当我们传一个变量给函数的参数时，就相当于该变量和函数参数所表示的变量都指向我们传入的数据，所以在函数内部进行修改时并不会修改传入的变量，而是将该变量的值复制后再进行修改:</p>
 <pre class="r"><code>modify &lt;- function(x){
@@ -149,7 +149,7 @@ f1(0)
 <p>我们可以通过<code>new.env</code>来创建新环境，通过$和[]来在新环境中创建变量(和列表操作类似)</p>
 <pre class="r"><code>e1 &lt;- new.env()
 e1
-&gt;&gt; &lt;environment: 0x0000000015e0a2e8&gt;
+&gt;&gt; &lt;environment: 0x0000000015e14358&gt;
 ##环境是用内存地址来表示
 
 ##创建变量
@@ -181,13 +181,13 @@ ls(e1)##ls查看环境中所有变量
 在创建环境时可以指定其父环境：</p>
 <pre class="r"><code>e2 &lt;- new.env(parent = e1) ##创建新环境e2，其父环境是e1
 e1
-&gt;&gt; &lt;environment: 0x0000000015e0a2e8&gt;
+&gt;&gt; &lt;environment: 0x0000000015e14358&gt;
 e2
-&gt;&gt; &lt;environment: 0x0000000015e8fb68&gt;
+&gt;&gt; &lt;environment: 0x0000000015e9eaa8&gt;
 
 ##可以使用parent.env查看环境的父环境
 parent.env(e2)
-&gt;&gt; &lt;environment: 0x0000000015e0a2e8&gt;
+&gt;&gt; &lt;environment: 0x0000000015e14358&gt;
 ##可以看到和e1的内存地址一样</code></pre>
 <p>需要注意的是：只有环境访问函数(exists/get)会沿着环境链寻找变量，操作符($/[])不会.</p>
 <pre class="r"><code>e2$y &lt;- 2
@@ -290,5 +290,11 @@ e1$x
 </div>
 <div id="与函数相关的环境" class="section level3">
 <h3>与函数相关的环境</h3>
+<p>有3个与函数及其运行过程相关的环境：</p>
+<ul>
+<li>执行环境(executing environment): 每次函数执行时，R都会新建一个环境来管理函数的执行过程，所以函数的参数和在函数内部创建的变量都是执行环境中的变量</li>
+<li>封闭环境(enclosing environment)：定义函数的环境，也是执行环境的父环境，所以在函数执行的时候，没有在执行环境中找到的变量就会到其父环境，也就是封闭环境中寻找(词法作用域)</li>
+<li>调用环境(calling environment): 调用函数的环境，可以使用parent.frame()来获取调用环境</li>
+</ul>
 </div>
 </div>
