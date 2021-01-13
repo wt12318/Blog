@@ -2,7 +2,7 @@
 title: 利用blogdown创建博客
 author: wutao
 date: '2021-01-06'
-slug: index.zh-cn
+slug: blogdown
 categories:
   - R
   - skills
