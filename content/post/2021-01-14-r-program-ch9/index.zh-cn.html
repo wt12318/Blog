@@ -1,0 +1,58 @@
+---
+title: 【R语言编程指南】元编程
+author: wutao
+date: '2021-01-14'
+slug: index.zh-cn
+categories:
+  - R
+tags:
+  - notes
+image : "77_cover_m.jpg"
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>Last compiled on 14 一月, 2021</p>
+<p>本章主要学习3个内容：</p>
+<ul>
+<li>函数式编程
+<ul>
+<li>在函数内部定义的函数→闭包</li>
+<li>与其他函数组合使用的函数→高阶函数</li>
+</ul></li>
+<li>基于语言的计算</li>
+<li>非标准计算</li>
+</ul>
+<div id="函数式编程" class="section level2">
+<h2>函数式编程</h2>
+<div id="闭包" class="section level3">
+<h3>闭包</h3>
+<p>闭包(closure)就是在函数内部定义的函数,下面创建一个简单的闭包：</p>
+<pre class="r"><code>addn &lt;- function(y){
+  function(x){
+    x+y
+  }
+}</code></pre>
+<p>上面的函数在其内部创建一个函数，所以其返回值是一个闭包；这个addn就相当于一个“函数工厂”，通过提供不同的参数就可以创建不同的函数：</p>
+<pre class="r"><code>add1 &lt;- addn(1)
+add2 &lt;- addn(2)
+
+add1
+&gt;&gt; function(x){
+&gt;&gt;     x+y
+&gt;&gt;   }
+&gt;&gt; &lt;environment: 0x0000000014ba4770&gt;
+##当函数不在当前工作环境，输出该函数时会显示其所在的环境
+
+add1(10)
+&gt;&gt; [1] 11
+add2(10)
+&gt;&gt; [1] 12</code></pre>
+<p>我们可以通过在<a href="http://localhost:4321/p/r-inter/">R内部机制</a>中提到的ennironment()来查看这两个闭包的封闭环境：</p>
+<pre class="r"><code>environment(add1)$y
+&gt;&gt; [1] 1
+environment(add2)$y
+&gt;&gt; [1] 2</code></pre>
+</div>
+</div>
