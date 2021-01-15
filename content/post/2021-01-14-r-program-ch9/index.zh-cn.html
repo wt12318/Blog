@@ -13,7 +13,7 @@ image : "77_cover_m.jpg"
 <script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
-<p>Last compiled on 14 一月, 2021</p>
+<p>Last compiled on 15 一月, 2021</p>
 <p>本章主要学习3个内容：</p>
 <ul>
 <li>函数式编程
@@ -42,7 +42,7 @@ add1
 &gt;&gt; function(x){
 &gt;&gt;     x+y
 &gt;&gt;   }
-&gt;&gt; &lt;environment: 0x0000000014ba4770&gt;
+&gt;&gt; &lt;environment: 0x0000000013dcef38&gt;
 ##当函数不在当前工作环境，输出该函数时会显示其所在的环境
 
 add1(10)
@@ -54,5 +54,96 @@ add2(10)
 &gt;&gt; [1] 1
 environment(add2)$y
 &gt;&gt; [1] 2</code></pre>
+<p>既然闭包可以用来创建函数，我们就可以将一些大部分情况下只会用到一部分参数的函数包装起来形成一个简版的“专用函数”. 比如画图的时候可能在不同的图之间只需要更改线条的颜色，那么就可以将其他参数包装起来，使代码更简洁：</p>
+<pre class="r"><code>color_line &lt;- function(col){
+  function(...){
+    plot(...,type=&quot;l&quot;,lty=1,col=col)
+  }
+}
+
+##生成专用函数
+red_line &lt;- color_line(&quot;red&quot;)
+red_line(rnorm(30))</code></pre>
+<p><img src="/post/2021-01-14-r-program-ch9/index.zh-cn_files/figure-html/ex4-1.png" width="672" /></p>
+<pre class="r"><code>##也可以设置其他参数，因为上面的闭包中使用...来处理其他的参数
+red_line(rnorm(30),main=&quot;Red line plot&quot;)</code></pre>
+<p><img src="/post/2021-01-14-r-program-ch9/index.zh-cn_files/figure-html/ex4-2.png" width="672" /></p>
+<pre class="r"><code>
+###与下面的代码相比较，使用闭包创建专用函数可以使代码更简洁
+#plot(rnorm(30),type = &quot;l&quot;,lty=1,col=&quot;red&quot;,main = &quot;Red line plot&quot;)</code></pre>
+</div>
+<div id="高阶函数" class="section level3">
+<h3>高阶函数</h3>
+<p>高阶函数指的是：将另外一个函数作为参数的函数
+将函数作为参数也就是将现有的函数和一个变量名绑定，那么将一个函数赋给一个变量会影响函数的封闭环境吗(这可能会影响到变量的搜索路径)，答案是不会改变，下面的实验证明了这一点：</p>
+<pre class="r"><code>f1 &lt;- function(){
+  cat(&quot;f1 的执行环境为 &quot;)
+  print(environment())
+  cat(&quot;f1 的封闭环境为 &quot;)
+  print(parent.env(environment()))
+  cat(&quot;f1 的调用环境为 &quot;)
+  print(parent.frame())
+}
+
+f2 &lt;- function(){
+  cat(&quot;f2 的执行环境为 &quot;)
+  print(environment())
+  cat(&quot;f2 的封闭环境为 &quot;)
+  print(parent.env(environment()))
+  cat(&quot;f2 的调用环境为 &quot;)
+  print(parent.frame())
+  p &lt;- f1
+  p()
+}
+
+f1()
+&gt;&gt; f1 的执行环境为 &lt;environment: 0x000000001455b740&gt;
+&gt;&gt; f1 的封闭环境为 &lt;environment: R_GlobalEnv&gt;
+&gt;&gt; f1 的调用环境为 &lt;environment: R_GlobalEnv&gt;
+f2()
+&gt;&gt; f2 的执行环境为 &lt;environment: 0x00000000140d2c10&gt;
+&gt;&gt; f2 的封闭环境为 &lt;environment: R_GlobalEnv&gt;
+&gt;&gt; f2 的调用环境为 &lt;environment: R_GlobalEnv&gt;
+&gt;&gt; f1 的执行环境为 &lt;environment: 0x00000000140bbc10&gt;
+&gt;&gt; f1 的封闭环境为 &lt;environment: R_GlobalEnv&gt;
+&gt;&gt; f1 的调用环境为 &lt;environment: 0x00000000140d2c10&gt;</code></pre>
+<p>可以看到在f2内部将f1赋给p并调用p，并不改变f1的封闭环境(定义的地方)，所以将一个函数赋给一个变量仅仅是给了函数一个“别名”:</p>
+<pre class="r"><code>f3 &lt;- function(x,y){
+  if(x &gt; y){
+    x-y
+  }else{
+    x+y
+  }
+}
+
+###给+,-函数起别名
+f4 &lt;- function(x,y){
+  op &lt;- if(x&gt;y) `-` else `+`
+  op(x,y)
+}
+
+f3(1,2)
+&gt;&gt; [1] 3
+f4(1,2)
+&gt;&gt; [1] 3</code></pre>
+<p>既然函数可以作为变量使用，那么函数也可以作为参数来传递：</p>
+<pre class="r"><code>add &lt;- function(x,y,z){
+  x+y+z
+}
+
+product &lt;- function(x,y,z){
+  x*y*z
+}
+
+###定义高阶函数，以其他函数作为参数
+combine &lt;- function(f,x,y,z){
+  f(x,y,z)
+}</code></pre>
+<p>这里的参数名f就相当于在高阶函数内部给传入的函数起了个别名，在combine函数内部这个函数就叫f了</p>
+<pre class="r"><code>###将add和product传给combine
+combine(add,3,4,5)
+&gt;&gt; [1] 12
+combine(product,3,4,5)
+&gt;&gt; [1] 60</code></pre>
 </div>
 </div>

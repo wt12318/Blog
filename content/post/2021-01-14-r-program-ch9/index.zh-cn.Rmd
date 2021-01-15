@@ -52,6 +52,97 @@ add2(10)
 ```{r ex3}
 environment(add1)$y
 environment(add2)$y
+```
+
+既然闭包可以用来创建函数，我们就可以将一些大部分情况下只会用到一部分参数的函数包装起来形成一个简版的“专用函数”. 比如画图的时候可能在不同的图之间只需要更改线条的颜色，那么就可以将其他参数包装起来，使代码更简洁：
+```{r ex4}
+color_line <- function(col){
+  function(...){
+    plot(...,type="l",lty=1,col=col)
+  }
+}
+
+##生成专用函数
+red_line <- color_line("red")
+red_line(rnorm(30))
+##也可以设置其他参数，因为上面的闭包中使用...来处理其他的参数
+red_line(rnorm(30),main="Red line plot")
+
+###与下面的代码相比较，使用闭包创建专用函数可以使代码更简洁
+#plot(rnorm(30),type = "l",lty=1,col="red",main = "Red line plot")
+```
+
+### 高阶函数
+高阶函数指的是：将另外一个函数作为参数的函数
+将函数作为参数也就是将现有的函数和一个变量名绑定，那么将一个函数赋给一个变量会影响函数的封闭环境吗(这可能会影响到变量的搜索路径)，答案是不会改变，下面的实验证明了这一点：
+```{r ex5}
+f1 <- function(){
+  cat("f1 的执行环境为 ")
+  print(environment())
+  cat("f1 的封闭环境为 ")
+  print(parent.env(environment()))
+  cat("f1 的调用环境为 ")
+  print(parent.frame())
+}
+
+f2 <- function(){
+  cat("f2 的执行环境为 ")
+  print(environment())
+  cat("f2 的封闭环境为 ")
+  print(parent.env(environment()))
+  cat("f2 的调用环境为 ")
+  print(parent.frame())
+  p <- f1
+  p()
+}
+
+f1()
+f2()
+```
+
+可以看到在f2内部将f1赋给p并调用p，并不改变f1的封闭环境(定义的地方)，所以将一个函数赋给一个变量仅仅是给了函数一个“别名”:
+```{r ex6}
+f3 <- function(x,y){
+  if(x > y){
+    x-y
+  }else{
+    x+y
+  }
+}
+
+###给+,-函数起别名
+f4 <- function(x,y){
+  op <- if(x>y) `-` else `+`
+  op(x,y)
+}
+
+f3(1,2)
+f4(1,2)
+```
+
+既然函数可以作为变量使用，那么函数也可以作为参数来传递：
+```{r ex7}
+add <- function(x,y,z){
+  x+y+z
+}
+
+product <- function(x,y,z){
+  x*y*z
+}
+
+###定义高阶函数，以其他函数作为参数
+combine <- function(f,x,y,z){
+  f(x,y,z)
+}
+```
+
+这里的参数名f就相当于在高阶函数内部给传入的函数起了个别名，在combine函数内部这个函数就叫f了
+```{r ex8}
+###将add和product传给combine
+combine(add,3,4,5)
+combine(product,3,4,5)
 
 ```
+
+
 
