@@ -13,7 +13,7 @@ image : "77_cover_m.jpg"
 <script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
-<p>Last compiled on 16 一月, 2021</p>
+<p>Last compiled on 18 一月, 2021</p>
 <p>本章主要学习3个内容：</p>
 <ul>
 <li>函数式编程
@@ -42,7 +42,7 @@ add1
 &gt;&gt; function(x){
 &gt;&gt;     x+y
 &gt;&gt;   }
-&gt;&gt; &lt;environment: 0x0000000013de2800&gt;
+&gt;&gt; &lt;environment: 0x000000001581d048&gt;
 ##当函数不在当前工作环境，输出该函数时会显示其所在的环境
 
 add1(10)
@@ -97,16 +97,16 @@ f2 &lt;- function(){
 }
 
 f1()
-&gt;&gt; f1 的执行环境为 &lt;environment: 0x00000000144d9c68&gt;
+&gt;&gt; f1 的执行环境为 &lt;environment: 0x0000000014009b88&gt;
 &gt;&gt; f1 的封闭环境为 &lt;environment: R_GlobalEnv&gt;
 &gt;&gt; f1 的调用环境为 &lt;environment: R_GlobalEnv&gt;
 f2()
-&gt;&gt; f2 的执行环境为 &lt;environment: 0x00000000140917b8&gt;
+&gt;&gt; f2 的执行环境为 &lt;environment: 0x0000000013c3a1d0&gt;
 &gt;&gt; f2 的封闭环境为 &lt;environment: R_GlobalEnv&gt;
 &gt;&gt; f2 的调用环境为 &lt;environment: R_GlobalEnv&gt;
-&gt;&gt; f1 的执行环境为 &lt;environment: 0x0000000014035e80&gt;
+&gt;&gt; f1 的执行环境为 &lt;environment: 0x0000000013c00c70&gt;
 &gt;&gt; f1 的封闭环境为 &lt;environment: R_GlobalEnv&gt;
-&gt;&gt; f1 的调用环境为 &lt;environment: 0x00000000140917b8&gt;</code></pre>
+&gt;&gt; f1 的调用环境为 &lt;environment: 0x0000000013c3a1d0&gt;</code></pre>
 <p>可以看到在f2内部将f1赋给p并调用p，并不改变f1的封闭环境(定义的地方)，所以将一个函数赋给一个变量仅仅是给了函数一个“别名”:</p>
 <pre class="r"><code>f3 &lt;- function(x,y){
   if(x &gt; y){
@@ -154,4 +154,142 @@ combine(product,3,4,5)
 <h2>基于语言的计算(元编程)</h2>
 <p>元编程可以允许我们调整语言本身，使特定的语言结构在特定情况下更方便使用(不是很懂)
 先来看一个元编程的用处：</p>
+<pre class="r"><code>###将iris数据集中数值列的大于80%分位数的数挑出来
+iris[iris$Sepal.Length &gt; quantile(iris$Sepal.Length,0.8),
+     iris$Sepal.Width &gt; quantile(iris$Sepal.Width,0.8),
+     iris$Petal.Length &gt; quantile(iris$Petal.Length,0.8),
+     iris$Petal.Width &gt; quantile(iris$Petal.Width,0.8)]
+&gt;&gt; Error in `[.data.frame`(iris, iris$Sepal.Length &gt; quantile(iris$Sepal.Length, : 参数没有用(iris$Petal.Width &gt; quantile(iris$Petal.Width, 0.8))
+
+##上面的代码就比较繁琐，需要多次写iris$
+##subset函数可以简化上述代码
+subset(iris,
+       Sepal.Length &gt; quantile(Sepal.Length,0.8) &amp;
+       Sepal.Width &gt; quantile(Sepal.Width,0.8) &amp;
+       Petal.Length &gt; quantile(Petal.Length,0.8) &amp;
+       Petal.Width &gt; quantile(Petal.Width,0.8))
+&gt;&gt;     Sepal.Length Sepal.Width Petal.Length Petal.Width   Species
+&gt;&gt; 110          7.2         3.6          6.1         2.5 virginica
+&gt;&gt; 118          7.7         3.8          6.7         2.2 virginica
+&gt;&gt; 132          7.9         3.8          6.4         2.0 virginica
+
+
+###但是下面的代码就不能运行：
+iris[Sepal.Length &gt; quantile(Sepal.Length,0.8) &amp;
+     Sepal.Width &gt; quantile(Sepal.Width,0.8) &amp;
+     Petal.Length &gt; quantile(Petal.Length,0.8) &amp;
+     Petal.Width &gt; quantile(Petal.Width,0.8)]
+&gt;&gt; Error in `[.data.frame`(iris, Sepal.Length &gt; quantile(Sepal.Length, 0.8) &amp; : 找不到对象&#39;Sepal.Length&#39;</code></pre>
+<p>这是因为subset函数使用<strong>元编程调整了其参数的计算环境</strong>(也就是不是去全局环境寻找这些变量，所以不会产生后面那样的报错)，这个过程分为两步：<em>捕获表达式；调整表达式的计算(修改计算的环境等)</em></p>
+<div id="捕获表达式" class="section level3">
+<h3>捕获表达式</h3>
+<p>捕获表达式指的是：将表达式本身存储为变量的形式，防止表达式的直接执行(执行了还修改什么)；使用函数quote()</p>
+<pre class="r"><code>call1 &lt;- quote(rnorm(5))
+call1
+&gt;&gt; rnorm(5)
+
+typeof(call1)
+&gt;&gt; [1] &quot;language&quot;
+class(call1)
+&gt;&gt; [1] &quot;call&quot;
+
+name1 &lt;- quote(rnorm)
+name1
+&gt;&gt; rnorm
+
+typeof(name1)
+&gt;&gt; [1] &quot;symbol&quot;
+class(name1)
+&gt;&gt; [1] &quot;name&quot;</code></pre>
+<p>可以看到当我们捕获一个函数调用的时候返回的是一个语言对象(language)/函数调用(call),当捕获一个函数名(变量名)返回的是符号(symbol)/名称(name)  <br />
+因此这里面我们需要区分的是：</p>
+<ul>
+<li>变量和符号对象：变量表示的是一个对象的名称，而这个名称本身也是一个对象，这个对象就是符号对象  <br />
+</li>
+<li>函数和调用对象：函数是可以被调用(计算)的对象，而调用对象是函数调用的语言对象，是不会被计算的</li>
+</ul>
+<p>可以将对象转化成列表以便查看其内部结构：</p>
+<pre class="r"><code>as.list(call1)
+&gt;&gt; [[1]]
+&gt;&gt; rnorm
+&gt;&gt; 
+&gt;&gt; [[2]]
+&gt;&gt; [1] 5
+
+typeof(call1[[1]])
+&gt;&gt; [1] &quot;symbol&quot;
+class(call1[[1]])
+&gt;&gt; [1] &quot;name&quot;
+
+typeof(call1[[2]])
+&gt;&gt; [1] &quot;double&quot;
+class(call1[[2]])
+&gt;&gt; [1] &quot;numeric&quot;</code></pre>
+<p>符号对象和调用对象都是语言对象，可以使用is.symbol/is.name检查对象是否为符号对象，使用is.call()检查是否为调用对象；也可以使用is.language()同时检查：</p>
+<pre class="r"><code>is.call(call1)
+&gt;&gt; [1] TRUE
+is.call(name1)
+&gt;&gt; [1] FALSE
+is.symbol(name1)
+&gt;&gt; [1] TRUE
+is.symbol(call1)
+&gt;&gt; [1] FALSE
+
+is.language(call1)
+&gt;&gt; [1] TRUE
+is.language(name1)
+&gt;&gt; [1] TRUE</code></pre>
+<p>捕获已知的表达式可以使用quote()，但是需要捕获用户输入的参数就不行了:</p>
+<pre class="r"><code>func1 &lt;- function(x){
+  quote(x)
+}
+
+func1(rnorm(5))
+&gt;&gt; x</code></pre>
+<p>这个时候可以使用函数substitute,substitute基本用法为：substitute(expr, env),expr为表达式，env为环境或者列表，默认是当前的执行环境,<em>将表达式中的变量替换成环境中的值</em>：</p>
+<pre class="r"><code>fun2 &lt;- function(x){
+  substitute(x)##默认是当前的执行环境
+}
+
+fun2(rnorm(5))
+&gt;&gt; rnorm(5)
+
+##substitute 用法
+substitute(x+y,list(x=1))
+&gt;&gt; 1 + y
+
+substitute(f(x+f(y)),list(f = quote(sin)))
+&gt;&gt; sin(x + sin(y))</code></pre>
+<p>除了将表达式捕获为语言对象之外，还可以直接创建语言对象:</p>
+<pre class="r"><code>##quote捕获
+call2 &lt;- quote(rnorm(5,mean = 3))
+
+call3 &lt;- call(&quot;rnorm&quot;,5,mean=3)
+call3
+&gt;&gt; rnorm(5, mean = 3)
+
+call4 &lt;- as.call(list(quote(rnorm),5,mean=3))
+call4
+&gt;&gt; rnorm(5, mean = 3)
+
+identical(call3,call4)
+&gt;&gt; [1] TRUE
+identical(call2,call3)
+&gt;&gt; [1] TRUE</code></pre>
+</div>
+<div id="修改表达式" class="section level3">
+<h3>修改表达式</h3>
+<p>当一个表达式被捕获为调用对象后，可以将其当作列表来修改:</p>
+<pre class="r"><code>call1
+&gt;&gt; rnorm(5)
+
+##可以修改第一个元素来更改要调用的函数
+call1[[1]] &lt;- quote(runif())
+call1
+&gt;&gt; runif()(5)
+##也可以添加新的元素来添加参数
+call1[[3]] &lt;- &quot;min&quot; 
+call1
+&gt;&gt; runif()(5, &quot;min&quot;)</code></pre>
+</div>
 </div>
