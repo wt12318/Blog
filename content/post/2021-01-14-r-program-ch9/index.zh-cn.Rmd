@@ -240,6 +240,7 @@ fun2 <- function(x){
 fun2(rnorm(5))
 
 ##substitute 用法
+##将x替换成执行环境中x所绑定的值，也就是函数的输入
 substitute(x+y,list(x=1))
 
 substitute(f(x+f(y)),list(f = quote(sin)))
@@ -249,9 +250,11 @@ substitute(f(x+f(y)),list(f = quote(sin)))
 ##quote捕获
 call2 <- quote(rnorm(5,mean = 3))
 
+##call 创建函数调用
 call3 <- call("rnorm",5,mean=3)
 call3
 
+##as.call将列表转化成函数调用
 call4 <- as.call(list(quote(rnorm),5,mean=3))
 call4
 
@@ -271,9 +274,56 @@ call1
 ##可以修改第一个元素来更改要调用的函数
 call1[[1]] <- quote(runif())
 call1
+
 ##也可以添加新的元素来添加参数
 call1[[3]] <- "min" 
 call1
 ```
 
+### 执行表达式
+捕获表达式后，下一步就是对其求值，可使用eval()函数 \   
+
+eval的基本用法为：eval(expr,envir,enclos),expr是需要被计算的对象，envir是执行环境，enclos是封闭环境(在执行环境中找不到变量就会到这里找)，enclos如果不指定就取决于envir的类型，如果envir是列表则enclos是当前执行函数的调用环境(parent.frame()),如果envir不是列表则enclos是baseenv()
+
+```{r ex18,error=TRUE}
+call1 <- quote(sin(x))
+eval(call1)
+
+x <- 1
+eval(call1)
+
+call2 <- quote(x^2+y^2)
+eval(call2)
+
+eval(call2,list(y=1))
+
+rm(x,y)
+
+e1 <- new.env()
+e1$x <- 1
+
+eval(call2,envir = e1)
+
+###新建一个环境 其父环境是e1
+e2 <- new.env(parent = e1)
+e2$y <- 2
+
+eval(call2,e2)
+
+###也可以指定封闭环境
+e3 <- new.env()
+e3$y  <- 1
+eval(call2,list(x=2),e3)
+```
+
+所以通过捕获表达式--执行表达式，我们可以**调整表达式的执行环境和封闭环境来定制计算过程**,这就是一开始subset函数的“魔力”所在,我们来看一下subset函数的源码：
+
+```{r subset}
+subset.data.frame
+
+```
+
+可以看到这里也使用了substitute和eval的组合来选择特定的实例或者变量
+
+## 非标准计算
 

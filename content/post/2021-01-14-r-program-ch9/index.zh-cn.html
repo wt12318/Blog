@@ -13,7 +13,7 @@ image : "77_cover_m.jpg"
 <script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
-<p>Last compiled on 18 一月, 2021</p>
+<p>Last compiled on 19 一月, 2021</p>
 <p>本章主要学习3个内容：</p>
 <ul>
 <li>函数式编程
@@ -42,7 +42,7 @@ add1
 &gt;&gt; function(x){
 &gt;&gt;     x+y
 &gt;&gt;   }
-&gt;&gt; &lt;environment: 0x000000001581d048&gt;
+&gt;&gt; &lt;environment: 0x00000000158b8b58&gt;
 ##当函数不在当前工作环境，输出该函数时会显示其所在的环境
 
 add1(10)
@@ -97,16 +97,16 @@ f2 &lt;- function(){
 }
 
 f1()
-&gt;&gt; f1 的执行环境为 &lt;environment: 0x0000000014009b88&gt;
+&gt;&gt; f1 的执行环境为 &lt;environment: 0x0000000013f6af88&gt;
 &gt;&gt; f1 的封闭环境为 &lt;environment: R_GlobalEnv&gt;
 &gt;&gt; f1 的调用环境为 &lt;environment: R_GlobalEnv&gt;
 f2()
-&gt;&gt; f2 的执行环境为 &lt;environment: 0x0000000013c3a1d0&gt;
+&gt;&gt; f2 的执行环境为 &lt;environment: 0x00000000138b4eb0&gt;
 &gt;&gt; f2 的封闭环境为 &lt;environment: R_GlobalEnv&gt;
 &gt;&gt; f2 的调用环境为 &lt;environment: R_GlobalEnv&gt;
-&gt;&gt; f1 的执行环境为 &lt;environment: 0x0000000013c00c70&gt;
+&gt;&gt; f1 的执行环境为 &lt;environment: 0x00000000135e7708&gt;
 &gt;&gt; f1 的封闭环境为 &lt;environment: R_GlobalEnv&gt;
-&gt;&gt; f1 的调用环境为 &lt;environment: 0x0000000013c3a1d0&gt;</code></pre>
+&gt;&gt; f1 的调用环境为 &lt;environment: 0x00000000138b4eb0&gt;</code></pre>
 <p>可以看到在f2内部将f1赋给p并调用p，并不改变f1的封闭环境(定义的地方)，所以将一个函数赋给一个变量仅仅是给了函数一个“别名”:</p>
 <pre class="r"><code>f3 &lt;- function(x,y){
   if(x &gt; y){
@@ -255,6 +255,7 @@ fun2(rnorm(5))
 &gt;&gt; rnorm(5)
 
 ##substitute 用法
+##将x替换成执行环境中x所绑定的值，也就是函数的输入
 substitute(x+y,list(x=1))
 &gt;&gt; 1 + y
 
@@ -264,10 +265,12 @@ substitute(f(x+f(y)),list(f = quote(sin)))
 <pre class="r"><code>##quote捕获
 call2 &lt;- quote(rnorm(5,mean = 3))
 
+##call 创建函数调用
 call3 &lt;- call(&quot;rnorm&quot;,5,mean=3)
 call3
 &gt;&gt; rnorm(5, mean = 3)
 
+##as.call将列表转化成函数调用
 call4 &lt;- as.call(list(quote(rnorm),5,mean=3))
 call4
 &gt;&gt; rnorm(5, mean = 3)
@@ -287,9 +290,79 @@ identical(call2,call3)
 call1[[1]] &lt;- quote(runif())
 call1
 &gt;&gt; runif()(5)
+
 ##也可以添加新的元素来添加参数
 call1[[3]] &lt;- &quot;min&quot; 
 call1
 &gt;&gt; runif()(5, &quot;min&quot;)</code></pre>
 </div>
+<div id="执行表达式" class="section level3">
+<h3>执行表达式</h3>
+<p>捕获表达式后，下一步就是对其求值，可使用eval()函数  </p>
+<p>eval的基本用法为：eval(expr,envir,enclos),expr是需要被计算的对象，envir是执行环境，enclos是封闭环境(在执行环境中找不到变量就会到这里找)，enclos如果不指定就取决于envir的类型，如果envir是列表则enclos是当前执行函数的调用环境(parent.frame()),如果envir不是列表则enclos是baseenv()</p>
+<pre class="r"><code>call1 &lt;- quote(sin(x))
+eval(call1)
+&gt;&gt; Error in eval(call1): 找不到对象&#39;x&#39;
+
+x &lt;- 1
+eval(call1)
+&gt;&gt; [1] 0.841471
+
+call2 &lt;- quote(x^2+y^2)
+eval(call2)
+&gt;&gt; Error in eval(call2): 找不到对象&#39;y&#39;
+
+eval(call2,list(y=1))
+&gt;&gt; [1] 2
+
+rm(x,y)
+&gt;&gt; Warning in rm(x, y): 找不到对象&#39;y&#39;
+
+e1 &lt;- new.env()
+e1$x &lt;- 1
+
+eval(call2,envir = e1)
+&gt;&gt; Error in eval(call2, envir = e1): 找不到对象&#39;y&#39;
+
+###新建一个环境 其父环境是e1
+e2 &lt;- new.env(parent = e1)
+e2$y &lt;- 2
+
+eval(call2,e2)
+&gt;&gt; [1] 5
+
+###也可以指定封闭环境
+e3 &lt;- new.env()
+e3$y  &lt;- 1
+eval(call2,list(x=2),e3)
+&gt;&gt; [1] 5</code></pre>
+<p>所以通过捕获表达式–执行表达式，我们可以<strong>调整表达式的执行环境和封闭环境来定制计算过程</strong>,这就是一开始subset函数的“魔力”所在,我们来看一下subset函数的源码：</p>
+<pre class="r"><code>subset.data.frame
+&gt;&gt; function (x, subset, select, drop = FALSE, ...) 
+&gt;&gt; {
+&gt;&gt;     r &lt;- if (missing(subset)) 
+&gt;&gt;         rep_len(TRUE, nrow(x))
+&gt;&gt;     else {
+&gt;&gt;         e &lt;- substitute(subset)
+&gt;&gt;         r &lt;- eval(e, x, parent.frame())
+&gt;&gt;         if (!is.logical(r)) 
+&gt;&gt;             stop(&quot;&#39;subset&#39; must be logical&quot;)
+&gt;&gt;         r &amp; !is.na(r)
+&gt;&gt;     }
+&gt;&gt;     vars &lt;- if (missing(select)) 
+&gt;&gt;         TRUE
+&gt;&gt;     else {
+&gt;&gt;         nl &lt;- as.list(seq_along(x))
+&gt;&gt;         names(nl) &lt;- names(x)
+&gt;&gt;         eval(substitute(select), nl, parent.frame())
+&gt;&gt;     }
+&gt;&gt;     x[r, vars, drop = drop]
+&gt;&gt; }
+&gt;&gt; &lt;bytecode: 0x0000000014513f98&gt;
+&gt;&gt; &lt;environment: namespace:base&gt;</code></pre>
+<p>可以看到这里也使用了substitute和eval的组合来选择特定的实例或者变量</p>
+</div>
+</div>
+<div id="非标准计算" class="section level2">
+<h2>非标准计算</h2>
 </div>
