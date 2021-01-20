@@ -327,3 +327,60 @@ subset.data.frame
 
 ## 非标准计算
 
+为了理解非标准计算，我们先来看一个例子，从向量中取子集：
+假设现在有一个整数向量，我们想从中提取第3个到倒数第5个元素
+```{r v_s}
+x <- 1:10
+x[3:(length(x)-5)]
+
+```
+
+上面的表达式用了两次x，有点繁琐；我们可以使用之前讲过的元编程技术来定义一个函数：
+```{r meta_f}
+qs <- function(x,range){
+  range <- substitute(range)
+  selector <- eval(range,list(.=length(x)))###用x向量的长度来代替点号
+  x[selector]
+}
+```
+
+这个函数可以使用点号来表示向量的长度：
+```{r meta_f1}
+qs(x,3:(.-5))
+
+###
+qs(x,.-1)
+
+```
+
+基于qs，下面的函数用于修剪x两端的n个元素，返回去掉前n个和后n个元素的中间部分
+```{r trim}
+trim_margin <- function(x,n){
+  qs(x,(n+1):(.-n-1))
+}
+
+```
+
+但是我们调用这个函数的时候，会出现错误：
+```{r trim_error,error=TRUE}
+trim_margin(x,3)
+
+```
+
+我们来分析一下为什么会报错：
+当调用trim_margin(x,3)时，会在一个新的执行环境中调用qs(x,(n+1):(.-n-1))，而在qs内部使用eval来执行捕获到的表达式，回忆一下eval的用法,
+
+>  eval的基本用法为：eval(expr,envir,enclos),expr是需要被计算的对象，envir是执行环境，enclos是封闭环境(在执行环境中找不到变量就会到这里找)，enclos如果不指定就取决于envir的类型，如果envir是列表则enclos是当前执行函数的调用环境(parent.frame()),如果envir不是列表则enclos是baseenv()
+
+而qs内部的eval提供的就是一个列表并且只有点号，所以当找不到n的时候就会到eval的调用环境(parent.frame())中去找，也就是qs的执行环境，而qs的执行环境当然时没有n的(n在qs的调用环境，也是trim_margin的执行环境中)，所以会报错
+
+解决这个报错也比较简单，我们只需要指定eval的封闭环境就行
+
+```{r fix}
+qs <- function(x,range){
+  range <- substitute(range)
+  selector <- eval(range,list(.=length(x)),enclos = parent.frame())###用x向量的长度来代替点号
+  x[selector]
+}
+
+```

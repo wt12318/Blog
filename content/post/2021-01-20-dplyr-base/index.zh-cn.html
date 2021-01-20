@@ -1,0 +1,173 @@
+---
+title: dplyr基础
+author: wutao
+date: '2021-01-20'
+slug: dplyr_base
+categories:
+  - R
+  - reading notes
+tags:
+  - R
+image : "dplyr.png"
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>参考：<a href="https://github.com/tidyverse/dplyr/blob/master/vignettes/base.Rmd">dplyr base</a></p>
+<p>这篇文章主要比较dplyr函数和base R的区别</p>
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<ol style="list-style-type: decimal">
+<li>dplyr动词输入和输出都是数据框，而base R大部分是单独的向量  <br />
+</li>
+<li>dplyr依赖非标准计算，所以不需要$来选择变量(列)</li>
+<li>dplyr使用一系列具有单个目的的动词，而在baseR中通常使用[]</li>
+<li>dplyr的动词通常可以通过管道(%&gt;%)连在一起，而baseR中常常需要将中间结果保存为变量</li>
+<li>所有的dplyr动词都可以处理分组数据并且和处理整个数据框类似，但是在baseR中可能每个组的处理都有着不同的形式</li>
+</ol>
+</div>
+<div id="one-table-verbs" class="section level2">
+<h2>One table verbs</h2>
+<table>
+<thead>
+<tr class="header">
+<th>dplyr</th>
+<th>base</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>arrange(df, x)</code></td>
+<td><code>df[order(x), , drop = FALSE]</code></td>
+</tr>
+<tr class="even">
+<td><code>distinct(df, x)</code></td>
+<td><code>df[!duplicated(x), , drop = FALSE]</code>, <code>unique()</code></td>
+</tr>
+<tr class="odd">
+<td><code>filter(df, x)</code></td>
+<td><code>df[which(x), , drop = FALSE]</code>, <code>subset()</code></td>
+</tr>
+<tr class="even">
+<td><code>mutate(df, z = x + y)</code></td>
+<td><code>df$z &lt;- df$x + df$y</code>, <code>transform()</code></td>
+</tr>
+<tr class="odd">
+<td><code>pull(df, 1)</code></td>
+<td><code>df[[1]]</code></td>
+</tr>
+<tr class="even">
+<td><code>pull(df, x)</code></td>
+<td><code>df$x</code></td>
+</tr>
+<tr class="odd">
+<td><code>rename(df, y = x)</code></td>
+<td><code>names(df)[names(df) == "x"] &lt;- "y"</code></td>
+</tr>
+<tr class="even">
+<td><code>relocate(df, y)</code></td>
+<td><code>df[union("y", names(df))]</code></td>
+</tr>
+<tr class="odd">
+<td><code>select(df, x, y)</code></td>
+<td><code>df[c("x", "y")]</code>, <code>subset()</code></td>
+</tr>
+<tr class="even">
+<td><code>select(df, starts_with("x")</code></td>
+<td><code>df[grepl(names(df), "^x")]</code></td>
+</tr>
+<tr class="odd">
+<td><code>summarise(df, mean(x))</code></td>
+<td><code>mean(df$x)</code>, <code>tapply()</code>, <code>aggregate()</code>, <code>by()</code></td>
+</tr>
+<tr class="even">
+<td><code>slice(df, c(1, 2, 5))</code></td>
+<td><code>df[c(1, 2, 5), , drop = FALSE]</code></td>
+</tr>
+</tbody>
+</table>
+<p>首先载入示例数据：</p>
+<pre class="r"><code>library(dplyr)
+&gt;&gt; Warning: 程辑包&#39;dplyr&#39;是用R版本3.6.3 来建造的
+&gt;&gt; 
+&gt;&gt; 载入程辑包：&#39;dplyr&#39;
+&gt;&gt; The following objects are masked from &#39;package:stats&#39;:
+&gt;&gt; 
+&gt;&gt;     filter, lag
+&gt;&gt; The following objects are masked from &#39;package:base&#39;:
+&gt;&gt; 
+&gt;&gt;     intersect, setdiff, setequal, union
+
+mtcars &lt;- as_tibble(mtcars)
+iris &lt;- as_tibble(iris)</code></pre>
+<div id="arrange-通过变量来组织行" class="section level3">
+<h3><code>arrange()</code> 通过变量来组织行</h3>
+<p><code>dplyr::arrange()</code>通过一列或多列的值来对数据框的行进行排序：</p>
+<pre class="r"><code>mtcars %&gt;% arrange(cyl,disp)
+&gt;&gt; # A tibble: 32 x 11
+&gt;&gt;      mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
+&gt;&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt;  1  33.9     4  71.1    65  4.22  1.84  19.9     1     1     4     1
+&gt;&gt;  2  30.4     4  75.7    52  4.93  1.62  18.5     1     1     4     2
+&gt;&gt;  3  32.4     4  78.7    66  4.08  2.2   19.5     1     1     4     1
+&gt;&gt;  4  27.3     4  79      66  4.08  1.94  18.9     1     1     4     1
+&gt;&gt;  5  30.4     4  95.1   113  3.77  1.51  16.9     1     1     5     2
+&gt;&gt;  6  22.8     4 108      93  3.85  2.32  18.6     1     1     4     1
+&gt;&gt;  7  21.5     4 120.     97  3.7   2.46  20.0     1     0     3     1
+&gt;&gt;  8  26       4 120.     91  4.43  2.14  16.7     0     1     5     2
+&gt;&gt;  9  21.4     4 121     109  4.11  2.78  18.6     1     1     4     2
+&gt;&gt; 10  22.8     4 141.     95  3.92  3.15  22.9     1     0     4     2
+&gt;&gt; # ... with 22 more rows</code></pre>
+<p><code>desc()</code>辅助函数可以进行降序排序：</p>
+<pre class="r"><code>mtcars %&gt;% arrange(desc(cyl),desc(disp))
+&gt;&gt; # A tibble: 32 x 11
+&gt;&gt;      mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
+&gt;&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt;  1  10.4     8   472   205  2.93  5.25  18.0     0     0     3     4
+&gt;&gt;  2  10.4     8   460   215  3     5.42  17.8     0     0     3     4
+&gt;&gt;  3  14.7     8   440   230  3.23  5.34  17.4     0     0     3     4
+&gt;&gt;  4  19.2     8   400   175  3.08  3.84  17.0     0     0     3     2
+&gt;&gt;  5  18.7     8   360   175  3.15  3.44  17.0     0     0     3     2
+&gt;&gt;  6  14.3     8   360   245  3.21  3.57  15.8     0     0     3     4
+&gt;&gt;  7  15.8     8   351   264  4.22  3.17  14.5     0     1     5     4
+&gt;&gt;  8  13.3     8   350   245  3.73  3.84  15.4     0     0     3     4
+&gt;&gt;  9  15.5     8   318   150  2.76  3.52  16.9     0     0     3     2
+&gt;&gt; 10  15.2     8   304   150  3.15  3.44  17.3     0     0     3     2
+&gt;&gt; # ... with 22 more rows</code></pre>
+<p>在base R中可以使用[+order函数对行进行排序：</p>
+<pre class="r"><code>mtcars[order(mtcars$cyl,mtcars$disp),,drop= FALSE]
+&gt;&gt; # A tibble: 32 x 11
+&gt;&gt;      mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
+&gt;&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt;  1  33.9     4  71.1    65  4.22  1.84  19.9     1     1     4     1
+&gt;&gt;  2  30.4     4  75.7    52  4.93  1.62  18.5     1     1     4     2
+&gt;&gt;  3  32.4     4  78.7    66  4.08  2.2   19.5     1     1     4     1
+&gt;&gt;  4  27.3     4  79      66  4.08  1.94  18.9     1     1     4     1
+&gt;&gt;  5  30.4     4  95.1   113  3.77  1.51  16.9     1     1     5     2
+&gt;&gt;  6  22.8     4 108      93  3.85  2.32  18.6     1     1     4     1
+&gt;&gt;  7  21.5     4 120.     97  3.7   2.46  20.0     1     0     3     1
+&gt;&gt;  8  26       4 120.     91  4.43  2.14  16.7     0     1     5     2
+&gt;&gt;  9  21.4     4 121     109  4.11  2.78  18.6     1     1     4     2
+&gt;&gt; 10  22.8     4 141.     95  3.92  3.15  22.9     1     0     4     2
+&gt;&gt; # ... with 22 more rows</code></pre>
+<p>记得加上drop= FALSE，不然如果输入是只有一列的数据框，输出就是一个向量而不是数据框了：</p>
+<pre class="r"><code>mtcars1 &lt;- mtcars %&gt;% select(mpg)
+a &lt;- mtcars1[order(mtcars1$mpg),]
+a
+&gt;&gt; # A tibble: 32 x 1
+&gt;&gt;      mpg
+&gt;&gt;    &lt;dbl&gt;
+&gt;&gt;  1  10.4
+&gt;&gt;  2  10.4
+&gt;&gt;  3  13.3
+&gt;&gt;  4  14.3
+&gt;&gt;  5  14.7
+&gt;&gt;  6  15  
+&gt;&gt;  7  15.2
+&gt;&gt;  8  15.2
+&gt;&gt;  9  15.5
+&gt;&gt; 10  15.8
+&gt;&gt; # ... with 22 more rows</code></pre>
+</div>
+</div>
