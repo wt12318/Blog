@@ -152,22 +152,217 @@ iris &lt;- as_tibble(iris)</code></pre>
 &gt;&gt; 10  22.8     4 141.     95  3.92  3.15  22.9     1     0     4     2
 &gt;&gt; # ... with 22 more rows</code></pre>
 <p>记得加上drop= FALSE，不然如果输入是只有一列的数据框，输出就是一个向量而不是数据框了：</p>
-<pre class="r"><code>mtcars1 &lt;- mtcars %&gt;% select(mpg)
-a &lt;- mtcars1[order(mtcars1$mpg),]
-a
-&gt;&gt; # A tibble: 32 x 1
-&gt;&gt;      mpg
-&gt;&gt;    &lt;dbl&gt;
-&gt;&gt;  1  10.4
-&gt;&gt;  2  10.4
-&gt;&gt;  3  13.3
-&gt;&gt;  4  14.3
-&gt;&gt;  5  14.7
-&gt;&gt;  6  15  
-&gt;&gt;  7  15.2
-&gt;&gt;  8  15.2
-&gt;&gt;  9  15.5
-&gt;&gt; 10  15.8
+<pre class="r"><code>dt &lt;- data.frame(
+  x = c(1,2,3)
+)
+
+dt[order(dt$x),]
+&gt;&gt; [1] 1 2 3
+dt[order(dt$x),,drop=FALSE]
+&gt;&gt;   x
+&gt;&gt; 1 1
+&gt;&gt; 2 2
+&gt;&gt; 3 3</code></pre>
+<p>进行倒序排序，base R有两种选择：</p>
+<ul>
+<li><p>对于数值变量可以加上负号-</p></li>
+<li><p>在order函数中指定参数decreasing=TRUE</p></li>
+</ul>
+<pre class="r"><code>mtcars[order(mtcars$cyl, mtcars$disp, decreasing = TRUE), , drop = FALSE]
+&gt;&gt; # A tibble: 32 x 11
+&gt;&gt;      mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
+&gt;&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt;  1  10.4     8   472   205  2.93  5.25  18.0     0     0     3     4
+&gt;&gt;  2  10.4     8   460   215  3     5.42  17.8     0     0     3     4
+&gt;&gt;  3  14.7     8   440   230  3.23  5.34  17.4     0     0     3     4
+&gt;&gt;  4  19.2     8   400   175  3.08  3.84  17.0     0     0     3     2
+&gt;&gt;  5  18.7     8   360   175  3.15  3.44  17.0     0     0     3     2
+&gt;&gt;  6  14.3     8   360   245  3.21  3.57  15.8     0     0     3     4
+&gt;&gt;  7  15.8     8   351   264  4.22  3.17  14.5     0     1     5     4
+&gt;&gt;  8  13.3     8   350   245  3.73  3.84  15.4     0     0     3     4
+&gt;&gt;  9  15.5     8   318   150  2.76  3.52  16.9     0     0     3     2
+&gt;&gt; 10  15.2     8   304   150  3.15  3.44  17.3     0     0     3     2
+&gt;&gt; # ... with 22 more rows
+
+###or
+mtcars[order(-mtcars$cyl, -mtcars$disp), , drop = FALSE]
+&gt;&gt; # A tibble: 32 x 11
+&gt;&gt;      mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
+&gt;&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt;  1  10.4     8   472   205  2.93  5.25  18.0     0     0     3     4
+&gt;&gt;  2  10.4     8   460   215  3     5.42  17.8     0     0     3     4
+&gt;&gt;  3  14.7     8   440   230  3.23  5.34  17.4     0     0     3     4
+&gt;&gt;  4  19.2     8   400   175  3.08  3.84  17.0     0     0     3     2
+&gt;&gt;  5  18.7     8   360   175  3.15  3.44  17.0     0     0     3     2
+&gt;&gt;  6  14.3     8   360   245  3.21  3.57  15.8     0     0     3     4
+&gt;&gt;  7  15.8     8   351   264  4.22  3.17  14.5     0     1     5     4
+&gt;&gt;  8  13.3     8   350   245  3.73  3.84  15.4     0     0     3     4
+&gt;&gt;  9  15.5     8   318   150  2.76  3.52  16.9     0     0     3     2
+&gt;&gt; 10  15.2     8   304   150  3.15  3.44  17.3     0     0     3     2
 &gt;&gt; # ... with 22 more rows</code></pre>
+</div>
+<div id="distinct选择唯一的行" class="section level3">
+<h3><code>distinct()</code>:选择唯一的行</h3>
+<p><code>dplyr::distinct()</code>选择唯一的行:</p>
+<pre class="r"><code>df &lt;- tibble(
+  x = sample(10, 100, rep = TRUE),
+  y = sample(10, 100, rep = TRUE)
+)
+
+df %&gt;% distinct(x)
+&gt;&gt; # A tibble: 10 x 1
+&gt;&gt;        x
+&gt;&gt;    &lt;int&gt;
+&gt;&gt;  1     8
+&gt;&gt;  2     1
+&gt;&gt;  3     3
+&gt;&gt;  4     7
+&gt;&gt;  5     5
+&gt;&gt;  6    10
+&gt;&gt;  7     6
+&gt;&gt;  8     2
+&gt;&gt;  9     9
+&gt;&gt; 10     4
+
+###使用.keep_all保留其他的列
+df %&gt;% distinct(x,.keep_all = TRUE)
+&gt;&gt; # A tibble: 10 x 2
+&gt;&gt;        x     y
+&gt;&gt;    &lt;int&gt; &lt;int&gt;
+&gt;&gt;  1     8     1
+&gt;&gt;  2     1     8
+&gt;&gt;  3     3     6
+&gt;&gt;  4     7     1
+&gt;&gt;  5     5     8
+&gt;&gt;  6    10     9
+&gt;&gt;  7     6     1
+&gt;&gt;  8     2     7
+&gt;&gt;  9     9     6
+&gt;&gt; 10     4     8</code></pre>
+<p>在base R中基于想要选择的列还是全部的数据框也有两种实现方法：</p>
+<pre class="r"><code>unique(df[&quot;x&quot;])
+&gt;&gt; # A tibble: 10 x 1
+&gt;&gt;        x
+&gt;&gt;    &lt;int&gt;
+&gt;&gt;  1     8
+&gt;&gt;  2     1
+&gt;&gt;  3     3
+&gt;&gt;  4     7
+&gt;&gt;  5     5
+&gt;&gt;  6    10
+&gt;&gt;  7     6
+&gt;&gt;  8     2
+&gt;&gt;  9     9
+&gt;&gt; 10     4
+
+df[!duplicated(df$x), , drop = FALSE]
+&gt;&gt; # A tibble: 10 x 2
+&gt;&gt;        x     y
+&gt;&gt;    &lt;int&gt; &lt;int&gt;
+&gt;&gt;  1     8     1
+&gt;&gt;  2     1     8
+&gt;&gt;  3     3     6
+&gt;&gt;  4     7     1
+&gt;&gt;  5     5     8
+&gt;&gt;  6    10     9
+&gt;&gt;  7     6     1
+&gt;&gt;  8     2     7
+&gt;&gt;  9     9     6
+&gt;&gt; 10     4     8</code></pre>
+</div>
+<div id="filter返回符合条件的行" class="section level3">
+<h3><code>filter()</code>返回符合条件的行</h3>
+<p><code>dplyr::filter()</code> 返回表达式是TRUE的行</p>
+<pre class="r"><code>starwars %&gt;% filter(species == &quot;Human&quot;)
+&gt;&gt; # A tibble: 35 x 14
+&gt;&gt;    name  height  mass hair_color skin_color eye_color birth_year sex   gender
+&gt;&gt;    &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+&gt;&gt;  1 Luke~    172    77 blond      fair       blue            19   male  mascu~
+&gt;&gt;  2 Dart~    202   136 none       white      yellow          41.9 male  mascu~
+&gt;&gt;  3 Leia~    150    49 brown      light      brown           19   fema~ femin~
+&gt;&gt;  4 Owen~    178   120 brown, gr~ light      blue            52   male  mascu~
+&gt;&gt;  5 Beru~    165    75 brown      light      blue            47   fema~ femin~
+&gt;&gt;  6 Bigg~    183    84 black      light      brown           24   male  mascu~
+&gt;&gt;  7 Obi-~    182    77 auburn, w~ fair       blue-gray       57   male  mascu~
+&gt;&gt;  8 Anak~    188    84 blond      fair       blue            41.9 male  mascu~
+&gt;&gt;  9 Wilh~    180    NA auburn, g~ fair       blue            64   male  mascu~
+&gt;&gt; 10 Han ~    180    80 brown      fair       brown           29   male  mascu~
+&gt;&gt; # ... with 25 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+&gt;&gt; #   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;
+
+starwars %&gt;% filter(mass &gt; 1000)
+&gt;&gt; # A tibble: 1 x 14
+&gt;&gt;   name  height  mass hair_color skin_color eye_color birth_year sex   gender
+&gt;&gt;   &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+&gt;&gt; 1 Jabb~    175  1358 &lt;NA&gt;       green-tan~ orange           600 herm~ mascu~
+&gt;&gt; # ... with 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+&gt;&gt; #   vehicles &lt;list&gt;, starships &lt;list&gt;
+
+starwars %&gt;% filter(hair_color == &quot;none&quot; &amp; eye_color == &quot;black&quot;)
+&gt;&gt; # A tibble: 9 x 14
+&gt;&gt;   name  height  mass hair_color skin_color eye_color birth_year sex   gender
+&gt;&gt;   &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+&gt;&gt; 1 Nien~    160    68 none       grey       black             NA male  mascu~
+&gt;&gt; 2 Gasg~    122    NA none       white, bl~ black             NA male  mascu~
+&gt;&gt; 3 Kit ~    196    87 none       green      black             NA male  mascu~
+&gt;&gt; 4 Plo ~    188    80 none       orange     black             22 male  mascu~
+&gt;&gt; 5 Lama~    229    88 none       grey       black             NA male  mascu~
+&gt;&gt; 6 Taun~    213    NA none       grey       black             NA fema~ femin~
+&gt;&gt; 7 Shaa~    178    57 none       red, blue~ black             NA fema~ femin~
+&gt;&gt; 8 Tion~    206    80 none       grey       black             NA male  mascu~
+&gt;&gt; 9 BB8       NA    NA none       none       black             NA none  mascu~
+&gt;&gt; # ... with 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;, films &lt;list&gt;,
+&gt;&gt; #   vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+<p>在baseR中有相似功能的函数是subset</p>
+<pre class="r"><code>subset(starwars, species == &quot;Human&quot;)
+&gt;&gt; # A tibble: 35 x 14
+&gt;&gt;    name  height  mass hair_color skin_color eye_color birth_year sex   gender
+&gt;&gt;    &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+&gt;&gt;  1 Luke~    172    77 blond      fair       blue            19   male  mascu~
+&gt;&gt;  2 Dart~    202   136 none       white      yellow          41.9 male  mascu~
+&gt;&gt;  3 Leia~    150    49 brown      light      brown           19   fema~ femin~
+&gt;&gt;  4 Owen~    178   120 brown, gr~ light      blue            52   male  mascu~
+&gt;&gt;  5 Beru~    165    75 brown      light      blue            47   fema~ femin~
+&gt;&gt;  6 Bigg~    183    84 black      light      brown           24   male  mascu~
+&gt;&gt;  7 Obi-~    182    77 auburn, w~ fair       blue-gray       57   male  mascu~
+&gt;&gt;  8 Anak~    188    84 blond      fair       blue            41.9 male  mascu~
+&gt;&gt;  9 Wilh~    180    NA auburn, g~ fair       blue            64   male  mascu~
+&gt;&gt; 10 Han ~    180    80 brown      fair       brown           29   male  mascu~
+&gt;&gt; # ... with 25 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+&gt;&gt; #   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+<p>也可以使用[来选择行：</p>
+<pre class="r"><code>starwars[starwars$species == &quot;Human&quot;,]
+&gt;&gt; # A tibble: 39 x 14
+&gt;&gt;    name  height  mass hair_color skin_color eye_color birth_year sex   gender
+&gt;&gt;    &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+&gt;&gt;  1 Luke~    172    77 blond      fair       blue            19   male  mascu~
+&gt;&gt;  2 Dart~    202   136 none       white      yellow          41.9 male  mascu~
+&gt;&gt;  3 Leia~    150    49 brown      light      brown           19   fema~ femin~
+&gt;&gt;  4 Owen~    178   120 brown, gr~ light      blue            52   male  mascu~
+&gt;&gt;  5 Beru~    165    75 brown      light      blue            47   fema~ femin~
+&gt;&gt;  6 Bigg~    183    84 black      light      brown           24   male  mascu~
+&gt;&gt;  7 Obi-~    182    77 auburn, w~ fair       blue-gray       57   male  mascu~
+&gt;&gt;  8 Anak~    188    84 blond      fair       blue            41.9 male  mascu~
+&gt;&gt;  9 Wilh~    180    NA auburn, g~ fair       blue            64   male  mascu~
+&gt;&gt; 10 Han ~    180    80 brown      fair       brown           29   male  mascu~
+&gt;&gt; # ... with 29 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+&gt;&gt; #   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+<p>但是这样处理会出现NA的情况，为了避免NA，可以结合使用which：</p>
+<pre class="r"><code>starwars[which(starwars$species == &quot;Human&quot;), , drop = FALSE]
+&gt;&gt; # A tibble: 35 x 14
+&gt;&gt;    name  height  mass hair_color skin_color eye_color birth_year sex   gender
+&gt;&gt;    &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; 
+&gt;&gt;  1 Luke~    172    77 blond      fair       blue            19   male  mascu~
+&gt;&gt;  2 Dart~    202   136 none       white      yellow          41.9 male  mascu~
+&gt;&gt;  3 Leia~    150    49 brown      light      brown           19   fema~ femin~
+&gt;&gt;  4 Owen~    178   120 brown, gr~ light      blue            52   male  mascu~
+&gt;&gt;  5 Beru~    165    75 brown      light      blue            47   fema~ femin~
+&gt;&gt;  6 Bigg~    183    84 black      light      brown           24   male  mascu~
+&gt;&gt;  7 Obi-~    182    77 auburn, w~ fair       blue-gray       57   male  mascu~
+&gt;&gt;  8 Anak~    188    84 blond      fair       blue            41.9 male  mascu~
+&gt;&gt;  9 Wilh~    180    NA auburn, g~ fair       blue            64   male  mascu~
+&gt;&gt; 10 Han ~    180    80 brown      fair       brown           29   male  mascu~
+&gt;&gt; # ... with 25 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
+&gt;&gt; #   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
 </div>
 </div>

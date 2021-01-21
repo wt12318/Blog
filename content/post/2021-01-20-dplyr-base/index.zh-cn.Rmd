@@ -21,30 +21,31 @@ knitr::opts_chunk$set(collapse = TRUE,comment=">>")
 
 ## Overview
 
-1. dplyr动词输入和输出都是数据框，而base R大部分是单独的向量 \       
-2. dplyr依赖非标准计算，所以不需要$来选择变量(列)
-3. dplyr使用一系列具有单个目的的动词，而在baseR中通常使用[]
-4. dplyr的动词通常可以通过管道(%>%)连在一起，而baseR中常常需要将中间结果保存为变量
-5. 所有的dplyr动词都可以处理分组数据并且和处理整个数据框类似，但是在baseR中可能每个组的处理都有着不同的形式
+1.  dplyr动词输入和输出都是数据框，而base R大部分是单独的向量  \
+2.  dplyr依赖非标准计算，所以不需要\$来选择变量(列)
+3.  dplyr使用一系列具有单个目的的动词，而在baseR中通常使用[]
+4.  dplyr的动词通常可以通过管道(%\>%)连在一起，而baseR中常常需要将中间结果保存为变量
+5.  所有的dplyr动词都可以处理分组数据并且和处理整个数据框类似，但是在baseR中可能每个组的处理都有着不同的形式
 
 ## One table verbs
 
 | dplyr                         | base                                             |
 |-------------------------------|--------------------------------------------------|
-| `arrange(df, x)`              | `df[order(x), , drop = FALSE]`                   | 
-| `distinct(df, x)`             | `df[!duplicated(x), , drop = FALSE]`, `unique()` | 
-| `filter(df, x)`               | `df[which(x), , drop = FALSE]`, `subset()`       | 
-| `mutate(df, z = x + y)`       | `df$z <- df$x + df$y`, `transform()`             | 
-| `pull(df, 1)`                 | `df[[1]]`                                        | 
-| `pull(df, x)`                 | `df$x`                                           | 
-| `rename(df, y = x)`           | `names(df)[names(df) == "x"] <- "y"`             | 
-| `relocate(df, y)`             | `df[union("y", names(df))]`                       | 
-| `select(df, x, y)`            | `df[c("x", "y")]`, `subset()`                    | 
-| `select(df, starts_with("x")` | `df[grepl(names(df), "^x")]`                     | 
-| `summarise(df, mean(x))`      | `mean(df$x)`, `tapply()`, `aggregate()`, `by()`  | 
-| `slice(df, c(1, 2, 5))`       | `df[c(1, 2, 5), , drop = FALSE]`                 | 
+| `arrange(df, x)`              | `df[order(x), , drop = FALSE]`                   |
+| `distinct(df, x)`             | `df[!duplicated(x), , drop = FALSE]`, `unique()` |
+| `filter(df, x)`               | `df[which(x), , drop = FALSE]`, `subset()`       |
+| `mutate(df, z = x + y)`       | `df$z <- df$x + df$y`, `transform()`             |
+| `pull(df, 1)`                 | `df[[1]]`                                        |
+| `pull(df, x)`                 | `df$x`                                           |
+| `rename(df, y = x)`           | `names(df)[names(df) == "x"] <- "y"`             |
+| `relocate(df, y)`             | `df[union("y", names(df))]`                      |
+| `select(df, x, y)`            | `df[c("x", "y")]`, `subset()`                    |
+| `select(df, starts_with("x")` | `df[grepl(names(df), "^x")]`                     |
+| `summarise(df, mean(x))`      | `mean(df$x)`, `tapply()`, `aggregate()`, `by()`  |
+| `slice(df, c(1, 2, 5))`       | `df[c(1, 2, 5), , drop = FALSE]`                 |
 
 首先载入示例数据：
+
 ```{r ex1}
 library(dplyr)
 
@@ -56,26 +57,101 @@ iris <- as_tibble(iris)
 ### `arrange()` 通过变量来组织行
 
 `dplyr::arrange()`通过一列或多列的值来对数据框的行进行排序：
+
 ```{r ex2}
 mtcars %>% arrange(cyl,disp)
 
 ```
 
 `desc()`辅助函数可以进行降序排序：
+
 ```{r ex3}
 mtcars %>% arrange(desc(cyl),desc(disp))
 
 ```
 
 在base R中可以使用[+order函数对行进行排序：
+
 ```{r ex4}
 mtcars[order(mtcars$cyl,mtcars$disp),,drop= FALSE]
 
 ```
+
 记得加上drop= FALSE，不然如果输入是只有一列的数据框，输出就是一个向量而不是数据框了：
+
 ```{r ex5}
-mtcars1 <- mtcars %>% select(mpg)
-a <- mtcars1[order(mtcars1$mpg),]
-a
+dt <- data.frame(
+  x = c(1,2,3)
+)
+
+dt[order(dt$x),]
+dt[order(dt$x),,drop=FALSE]
 ```
 
+进行倒序排序，base R有两种选择：
+
+-   对于数值变量可以加上负号-
+
+-   在order函数中指定参数decreasing=TRUE
+
+```{r ex6}
+mtcars[order(mtcars$cyl, mtcars$disp, decreasing = TRUE), , drop = FALSE]
+
+###or
+mtcars[order(-mtcars$cyl, -mtcars$disp), , drop = FALSE]
+
+```
+
+### `distinct()`:选择唯一的行
+
+`dplyr::distinct()`选择唯一的行:
+
+```{r ex7}
+df <- tibble(
+  x = sample(10, 100, rep = TRUE),
+  y = sample(10, 100, rep = TRUE)
+)
+
+df %>% distinct(x)
+
+###使用.keep_all保留其他的列
+df %>% distinct(x,.keep_all = TRUE)
+```
+
+在base R中基于想要选择的列还是全部的数据框也有两种实现方法：
+
+```{r ex8}
+unique(df["x"])
+
+df[!duplicated(df$x), , drop = FALSE]
+```
+
+### `filter()`返回符合条件的行
+
+`dplyr::filter()` 返回表达式是TRUE的行
+
+```{r ex9}
+starwars %>% filter(species == "Human")
+
+starwars %>% filter(mass > 1000)
+
+starwars %>% filter(hair_color == "none" & eye_color == "black")
+```
+
+在baseR中有相似功能的函数是subset
+
+```{r ex10}
+subset(starwars, species == "Human")
+```
+
+也可以使用[来选择行：
+
+```{r ex11, paged.print=TRUE}
+starwars[starwars$species == "Human",]
+```
+
+但是这样处理会出现NA的情况，为了避免NA，可以结合使用which：
+
+```{r ex12}
+starwars[which(starwars$species == "Human"), , drop = FALSE]
+```
