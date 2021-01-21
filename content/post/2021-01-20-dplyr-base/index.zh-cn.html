@@ -213,62 +213,62 @@ df %&gt;% distinct(x)
 &gt;&gt; # A tibble: 10 x 1
 &gt;&gt;        x
 &gt;&gt;    &lt;int&gt;
-&gt;&gt;  1     8
-&gt;&gt;  2     1
-&gt;&gt;  3     3
-&gt;&gt;  4     7
-&gt;&gt;  5     5
-&gt;&gt;  6    10
-&gt;&gt;  7     6
-&gt;&gt;  8     2
-&gt;&gt;  9     9
-&gt;&gt; 10     4
+&gt;&gt;  1     6
+&gt;&gt;  2    10
+&gt;&gt;  3     9
+&gt;&gt;  4     5
+&gt;&gt;  5     1
+&gt;&gt;  6     7
+&gt;&gt;  7     8
+&gt;&gt;  8     4
+&gt;&gt;  9     3
+&gt;&gt; 10     2
 
 ###使用.keep_all保留其他的列
 df %&gt;% distinct(x,.keep_all = TRUE)
 &gt;&gt; # A tibble: 10 x 2
 &gt;&gt;        x     y
 &gt;&gt;    &lt;int&gt; &lt;int&gt;
-&gt;&gt;  1     8     1
-&gt;&gt;  2     1     8
-&gt;&gt;  3     3     6
-&gt;&gt;  4     7     1
-&gt;&gt;  5     5     8
-&gt;&gt;  6    10     9
-&gt;&gt;  7     6     1
-&gt;&gt;  8     2     7
-&gt;&gt;  9     9     6
-&gt;&gt; 10     4     8</code></pre>
+&gt;&gt;  1     6     2
+&gt;&gt;  2    10     3
+&gt;&gt;  3     9     5
+&gt;&gt;  4     5     4
+&gt;&gt;  5     1     3
+&gt;&gt;  6     7     6
+&gt;&gt;  7     8     8
+&gt;&gt;  8     4    10
+&gt;&gt;  9     3     5
+&gt;&gt; 10     2     8</code></pre>
 <p>在base R中基于想要选择的列还是全部的数据框也有两种实现方法：</p>
 <pre class="r"><code>unique(df[&quot;x&quot;])
 &gt;&gt; # A tibble: 10 x 1
 &gt;&gt;        x
 &gt;&gt;    &lt;int&gt;
-&gt;&gt;  1     8
-&gt;&gt;  2     1
-&gt;&gt;  3     3
-&gt;&gt;  4     7
-&gt;&gt;  5     5
-&gt;&gt;  6    10
-&gt;&gt;  7     6
-&gt;&gt;  8     2
-&gt;&gt;  9     9
-&gt;&gt; 10     4
+&gt;&gt;  1     6
+&gt;&gt;  2    10
+&gt;&gt;  3     9
+&gt;&gt;  4     5
+&gt;&gt;  5     1
+&gt;&gt;  6     7
+&gt;&gt;  7     8
+&gt;&gt;  8     4
+&gt;&gt;  9     3
+&gt;&gt; 10     2
 
 df[!duplicated(df$x), , drop = FALSE]
 &gt;&gt; # A tibble: 10 x 2
 &gt;&gt;        x     y
 &gt;&gt;    &lt;int&gt; &lt;int&gt;
-&gt;&gt;  1     8     1
-&gt;&gt;  2     1     8
-&gt;&gt;  3     3     6
-&gt;&gt;  4     7     1
-&gt;&gt;  5     5     8
-&gt;&gt;  6    10     9
-&gt;&gt;  7     6     1
-&gt;&gt;  8     2     7
-&gt;&gt;  9     9     6
-&gt;&gt; 10     4     8</code></pre>
+&gt;&gt;  1     6     2
+&gt;&gt;  2    10     3
+&gt;&gt;  3     9     5
+&gt;&gt;  4     5     4
+&gt;&gt;  5     1     3
+&gt;&gt;  6     7     6
+&gt;&gt;  7     8     8
+&gt;&gt;  8     4    10
+&gt;&gt;  9     3     5
+&gt;&gt; 10     2     8</code></pre>
 </div>
 <div id="filter返回符合条件的行" class="section level3">
 <h3><code>filter()</code>返回符合条件的行</h3>
@@ -364,5 +364,556 @@ starwars %&gt;% filter(hair_color == &quot;none&quot; &amp; eye_color == &quot;b
 &gt;&gt; 10 Han ~    180    80 brown      fair       brown           29   male  mascu~
 &gt;&gt; # ... with 25 more rows, and 5 more variables: homeworld &lt;chr&gt;, species &lt;chr&gt;,
 &gt;&gt; #   films &lt;list&gt;, vehicles &lt;list&gt;, starships &lt;list&gt;</code></pre>
+</div>
+<div id="mutate创建或转化变量" class="section level3">
+<h3><code>mutate()</code>创建或转化变量</h3>
+<p><code>dplyr::mutate</code>从已存在的变量中创建新的变量</p>
+<pre class="r"><code>df %&gt;% mutate(z = x + y, z2 = z ^ 2)
+&gt;&gt; # A tibble: 100 x 4
+&gt;&gt;        x     y     z    z2
+&gt;&gt;    &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt;
+&gt;&gt;  1     6     2     8    64
+&gt;&gt;  2    10     3    13   169
+&gt;&gt;  3     9     5    14   196
+&gt;&gt;  4     5     4     9    81
+&gt;&gt;  5     1     3     4    16
+&gt;&gt;  6     7     6    13   169
+&gt;&gt;  7     5     4     9    81
+&gt;&gt;  8     8     8    16   256
+&gt;&gt;  9     9     6    15   225
+&gt;&gt; 10     8     3    11   121
+&gt;&gt; # ... with 90 more rows</code></pre>
+<p>在base R里面相似的有transform函数，但是要注意的是transform函数不能使用刚创建的变量，只能使用已有的变量：</p>
+<pre class="r"><code>head(transform(df,z=x+y,z2=z^2))
+&gt;&gt; Error in eval(substitute(list(...)), `_data`, parent.frame()): 找不到对象&#39;z&#39;
+
+head(transform(df,z=x+y,z2=(x+y)^2))
+&gt;&gt;    x y  z  z2
+&gt;&gt; 1  6 2  8  64
+&gt;&gt; 2 10 3 13 169
+&gt;&gt; 3  9 5 14 196
+&gt;&gt; 4  5 4  9  81
+&gt;&gt; 5  1 3  4  16
+&gt;&gt; 6  7 6 13 169</code></pre>
+<p>也可以使用<code>$&lt;-</code>来创建新的变量：</p>
+<pre class="r"><code>mtcars$cy12 &lt;- mtcars$cyl * 2
+mtcars$cy14 &lt;- mtcars$cy12 *2</code></pre>
+<p>当应用到分组的数据框上，mutate可以对每个组别计算新的变量：</p>
+<pre class="r"><code>gf &lt;- tibble(g = c(1, 1, 2, 2), x = c(0.5, 1.5, 2.5, 3.5))
+gf %&gt;% 
+  group_by(g) %&gt;% 
+  mutate(x_mean = mean(x), x_rank = rank(x))
+&gt;&gt; # A tibble: 4 x 4
+&gt;&gt; # Groups:   g [2]
+&gt;&gt;       g     x x_mean x_rank
+&gt;&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+&gt;&gt; 1     1   0.5      1      1
+&gt;&gt; 2     1   1.5      1      2
+&gt;&gt; 3     2   2.5      3      1
+&gt;&gt; 4     2   3.5      3      2</code></pre>
+<p>在baseR中可以用使用<code>ave</code>函数</p>
+<pre class="r"><code>transform(gf, 
+  x_mean = ave(x, g, FUN = mean), 
+  x_rank = ave(x, g, FUN = rank)
+)
+&gt;&gt;   g   x x_mean x_rank
+&gt;&gt; 1 1 0.5      1      1
+&gt;&gt; 2 1 1.5      1      2
+&gt;&gt; 3 2 2.5      3      1
+&gt;&gt; 4 2 3.5      3      2</code></pre>
+</div>
+<div id="pull-抽提变量" class="section level3">
+<h3><code>pull()</code> 抽提变量</h3>
+<p><code>dplyr::pull()</code>可以通过名称或者位置提取变量：</p>
+<pre class="r"><code>mtcars %&gt;% pull(1)
+&gt;&gt;  [1] 21.0 21.0 22.8 21.4 18.7 18.1 14.3 24.4 22.8 19.2 17.8 16.4 17.3 15.2 10.4
+&gt;&gt; [16] 10.4 14.7 32.4 30.4 33.9 21.5 15.5 15.2 13.3 19.2 27.3 26.0 30.4 15.8 19.7
+&gt;&gt; [31] 15.0 21.4
+
+mtcars %&gt;% pull(cyl)
+&gt;&gt;  [1] 6 6 4 6 8 6 8 4 4 6 6 8 8 8 8 8 8 4 4 4 4 8 8 8 8 4 4 4 8 6 8 4</code></pre>
+<p>在base R中相当于[[和$:</p>
+<pre class="r"><code>mtcars[[&quot;cyl&quot;]]
+&gt;&gt;  [1] 6 6 4 6 8 6 8 4 4 6 6 8 8 8 8 8 8 4 4 4 4 8 8 8 8 4 4 4 8 6 8 4
+mtcars[[1]]
+&gt;&gt;  [1] 21.0 21.0 22.8 21.4 18.7 18.1 14.3 24.4 22.8 19.2 17.8 16.4 17.3 15.2 10.4
+&gt;&gt; [16] 10.4 14.7 32.4 30.4 33.9 21.5 15.5 15.2 13.3 19.2 27.3 26.0 30.4 15.8 19.7
+&gt;&gt; [31] 15.0 21.4
+
+mtcars$cyl
+&gt;&gt;  [1] 6 6 4 6 8 6 8 4 4 6 6 8 8 8 8 8 8 4 4 4 4 8 8 8 8 4 4 4 8 6 8 4</code></pre>
+</div>
+<div id="relocate-改变列的顺序" class="section level3">
+<h3><code>relocate()</code> 改变列的顺序</h3>
+<p><code>dplyr::relocate()</code> 可以方便的将列移到新的位置(默认是最前面,下面要讲的<code>select</code>只能将列移到最前面):</p>
+<pre class="r"><code># to front
+mtcars %&gt;% relocate(gear, carb) 
+&gt;&gt; # A tibble: 32 x 13
+&gt;&gt;     gear  carb   mpg   cyl  disp    hp  drat    wt  qsec    vs    am  cy12  cy14
+&gt;&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt;  1     4     4  21       6  160    110  3.9   2.62  16.5     0     1    12    24
+&gt;&gt;  2     4     4  21       6  160    110  3.9   2.88  17.0     0     1    12    24
+&gt;&gt;  3     4     1  22.8     4  108     93  3.85  2.32  18.6     1     1     8    16
+&gt;&gt;  4     3     1  21.4     6  258    110  3.08  3.22  19.4     1     0    12    24
+&gt;&gt;  5     3     2  18.7     8  360    175  3.15  3.44  17.0     0     0    16    32
+&gt;&gt;  6     3     1  18.1     6  225    105  2.76  3.46  20.2     1     0    12    24
+&gt;&gt;  7     3     4  14.3     8  360    245  3.21  3.57  15.8     0     0    16    32
+&gt;&gt;  8     4     2  24.4     4  147.    62  3.69  3.19  20       1     0     8    16
+&gt;&gt;  9     4     2  22.8     4  141.    95  3.92  3.15  22.9     1     0     8    16
+&gt;&gt; 10     4     4  19.2     6  168.   123  3.92  3.44  18.3     1     0    12    24
+&gt;&gt; # ... with 22 more rows
+
+# to back
+mtcars %&gt;% relocate(mpg, cyl, .after = last_col()) 
+&gt;&gt; # A tibble: 32 x 13
+&gt;&gt;     disp    hp  drat    wt  qsec    vs    am  gear  carb  cy12  cy14   mpg   cyl
+&gt;&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt;  1  160    110  3.9   2.62  16.5     0     1     4     4    12    24  21       6
+&gt;&gt;  2  160    110  3.9   2.88  17.0     0     1     4     4    12    24  21       6
+&gt;&gt;  3  108     93  3.85  2.32  18.6     1     1     4     1     8    16  22.8     4
+&gt;&gt;  4  258    110  3.08  3.22  19.4     1     0     3     1    12    24  21.4     6
+&gt;&gt;  5  360    175  3.15  3.44  17.0     0     0     3     2    16    32  18.7     8
+&gt;&gt;  6  225    105  2.76  3.46  20.2     1     0     3     1    12    24  18.1     6
+&gt;&gt;  7  360    245  3.21  3.57  15.8     0     0     3     4    16    32  14.3     8
+&gt;&gt;  8  147.    62  3.69  3.19  20       1     0     4     2     8    16  24.4     4
+&gt;&gt;  9  141.    95  3.92  3.15  22.9     1     0     4     2     8    16  22.8     4
+&gt;&gt; 10  168.   123  3.92  3.44  18.3     1     0     4     4    12    24  19.2     6
+&gt;&gt; # ... with 22 more rows
+
+# to after disp
+mtcars %&gt;% relocate(mpg, cyl, .after = disp) 
+&gt;&gt; # A tibble: 32 x 13
+&gt;&gt;     disp   mpg   cyl    hp  drat    wt  qsec    vs    am  gear  carb  cy12  cy14
+&gt;&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt;  1  160   21       6   110  3.9   2.62  16.5     0     1     4     4    12    24
+&gt;&gt;  2  160   21       6   110  3.9   2.88  17.0     0     1     4     4    12    24
+&gt;&gt;  3  108   22.8     4    93  3.85  2.32  18.6     1     1     4     1     8    16
+&gt;&gt;  4  258   21.4     6   110  3.08  3.22  19.4     1     0     3     1    12    24
+&gt;&gt;  5  360   18.7     8   175  3.15  3.44  17.0     0     0     3     2    16    32
+&gt;&gt;  6  225   18.1     6   105  2.76  3.46  20.2     1     0     3     1    12    24
+&gt;&gt;  7  360   14.3     8   245  3.21  3.57  15.8     0     0     3     4    16    32
+&gt;&gt;  8  147.  24.4     4    62  3.69  3.19  20       1     0     4     2     8    16
+&gt;&gt;  9  141.  22.8     4    95  3.92  3.15  22.9     1     0     4     2     8    16
+&gt;&gt; 10  168.  19.2     6   123  3.92  3.44  18.3     1     0     4     4    12    24
+&gt;&gt; # ... with 22 more rows</code></pre>
+<p>在base R中就有一点复杂：</p>
+<pre class="r"><code>##to front
+mtcars[union(c(&quot;gear&quot;, &quot;carb&quot;), names(mtcars))]
+&gt;&gt; # A tibble: 32 x 13
+&gt;&gt;     gear  carb   mpg   cyl  disp    hp  drat    wt  qsec    vs    am  cy12  cy14
+&gt;&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt;  1     4     4  21       6  160    110  3.9   2.62  16.5     0     1    12    24
+&gt;&gt;  2     4     4  21       6  160    110  3.9   2.88  17.0     0     1    12    24
+&gt;&gt;  3     4     1  22.8     4  108     93  3.85  2.32  18.6     1     1     8    16
+&gt;&gt;  4     3     1  21.4     6  258    110  3.08  3.22  19.4     1     0    12    24
+&gt;&gt;  5     3     2  18.7     8  360    175  3.15  3.44  17.0     0     0    16    32
+&gt;&gt;  6     3     1  18.1     6  225    105  2.76  3.46  20.2     1     0    12    24
+&gt;&gt;  7     3     4  14.3     8  360    245  3.21  3.57  15.8     0     0    16    32
+&gt;&gt;  8     4     2  24.4     4  147.    62  3.69  3.19  20       1     0     8    16
+&gt;&gt;  9     4     2  22.8     4  141.    95  3.92  3.15  22.9     1     0     8    16
+&gt;&gt; 10     4     4  19.2     6  168.   123  3.92  3.44  18.3     1     0    12    24
+&gt;&gt; # ... with 22 more rows
+
+###to back
+##先将要移动的列去掉，再重组到后面
+to_back &lt;- c(&quot;mpg&quot;, &quot;cyl&quot;)
+mtcars[c(setdiff(names(mtcars), to_back), to_back)]
+&gt;&gt; # A tibble: 32 x 13
+&gt;&gt;     disp    hp  drat    wt  qsec    vs    am  gear  carb  cy12  cy14   mpg   cyl
+&gt;&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt;  1  160    110  3.9   2.62  16.5     0     1     4     4    12    24  21       6
+&gt;&gt;  2  160    110  3.9   2.88  17.0     0     1     4     4    12    24  21       6
+&gt;&gt;  3  108     93  3.85  2.32  18.6     1     1     4     1     8    16  22.8     4
+&gt;&gt;  4  258    110  3.08  3.22  19.4     1     0     3     1    12    24  21.4     6
+&gt;&gt;  5  360    175  3.15  3.44  17.0     0     0     3     2    16    32  18.7     8
+&gt;&gt;  6  225    105  2.76  3.46  20.2     1     0     3     1    12    24  18.1     6
+&gt;&gt;  7  360    245  3.21  3.57  15.8     0     0     3     4    16    32  14.3     8
+&gt;&gt;  8  147.    62  3.69  3.19  20       1     0     4     2     8    16  24.4     4
+&gt;&gt;  9  141.    95  3.92  3.15  22.9     1     0     4     2     8    16  22.8     4
+&gt;&gt; 10  168.   123  3.92  3.44  18.3     1     0     4     4    12    24  19.2     6
+&gt;&gt; # ... with 22 more rows</code></pre>
+</div>
+<div id="rename-重命名变量" class="section level3">
+<h3><code>rename()</code> 重命名变量</h3>
+<p><code>dplyr::rename()</code>可以通过旧的名称或者位置来重命名变量：</p>
+<pre class="r"><code>iris %&gt;% rename(sepal_length = Sepal.Length, sepal_width = 2)
+&gt;&gt; # A tibble: 150 x 5
+&gt;&gt;    sepal_length sepal_width Petal.Length Petal.Width Species
+&gt;&gt;           &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt; &lt;fct&gt;  
+&gt;&gt;  1          5.1         3.5          1.4         0.2 setosa 
+&gt;&gt;  2          4.9         3            1.4         0.2 setosa 
+&gt;&gt;  3          4.7         3.2          1.3         0.2 setosa 
+&gt;&gt;  4          4.6         3.1          1.5         0.2 setosa 
+&gt;&gt;  5          5           3.6          1.4         0.2 setosa 
+&gt;&gt;  6          5.4         3.9          1.7         0.4 setosa 
+&gt;&gt;  7          4.6         3.4          1.4         0.3 setosa 
+&gt;&gt;  8          5           3.4          1.5         0.2 setosa 
+&gt;&gt;  9          4.4         2.9          1.4         0.2 setosa 
+&gt;&gt; 10          4.9         3.1          1.5         0.1 setosa 
+&gt;&gt; # ... with 140 more rows</code></pre>
+<p>在base R中根据位置来重命名变量是比较直接的：</p>
+<pre class="r"><code>iris2 &lt;- iris
+names(iris2)[2] &lt;- &quot;sepal_width&quot;</code></pre>
+<p>通过旧的变量名来重命名有一点繁琐：</p>
+<pre class="r"><code>names(iris2)[names(iris2) == &quot;Sepal.Length&quot;] &lt;- &quot;sepal_length&quot;</code></pre>
+</div>
+<div id="rename_with通过函数来重命名变量" class="section level3">
+<h3><code>rename_with()</code>通过函数来重命名变量</h3>
+<p><code>dplyr::rename_with()</code>通过函数来转化列名：</p>
+<pre class="r"><code>iris %&gt;% rename_with(toupper)
+&gt;&gt; # A tibble: 150 x 5
+&gt;&gt;    SEPAL.LENGTH SEPAL.WIDTH PETAL.LENGTH PETAL.WIDTH SPECIES
+&gt;&gt;           &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt; &lt;fct&gt;  
+&gt;&gt;  1          5.1         3.5          1.4         0.2 setosa 
+&gt;&gt;  2          4.9         3            1.4         0.2 setosa 
+&gt;&gt;  3          4.7         3.2          1.3         0.2 setosa 
+&gt;&gt;  4          4.6         3.1          1.5         0.2 setosa 
+&gt;&gt;  5          5           3.6          1.4         0.2 setosa 
+&gt;&gt;  6          5.4         3.9          1.7         0.4 setosa 
+&gt;&gt;  7          4.6         3.4          1.4         0.3 setosa 
+&gt;&gt;  8          5           3.4          1.5         0.2 setosa 
+&gt;&gt;  9          4.4         2.9          1.4         0.2 setosa 
+&gt;&gt; 10          4.9         3.1          1.5         0.1 setosa 
+&gt;&gt; # ... with 140 more rows
+
+###也可以选择范围，默认是所有列
+rename_with(iris, toupper, starts_with(&quot;Petal&quot;))
+&gt;&gt; # A tibble: 150 x 5
+&gt;&gt;    Sepal.Length Sepal.Width PETAL.LENGTH PETAL.WIDTH Species
+&gt;&gt;           &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt; &lt;fct&gt;  
+&gt;&gt;  1          5.1         3.5          1.4         0.2 setosa 
+&gt;&gt;  2          4.9         3            1.4         0.2 setosa 
+&gt;&gt;  3          4.7         3.2          1.3         0.2 setosa 
+&gt;&gt;  4          4.6         3.1          1.5         0.2 setosa 
+&gt;&gt;  5          5           3.6          1.4         0.2 setosa 
+&gt;&gt;  6          5.4         3.9          1.7         0.4 setosa 
+&gt;&gt;  7          4.6         3.4          1.4         0.3 setosa 
+&gt;&gt;  8          5           3.4          1.5         0.2 setosa 
+&gt;&gt;  9          4.4         2.9          1.4         0.2 setosa 
+&gt;&gt; 10          4.9         3.1          1.5         0.1 setosa 
+&gt;&gt; # ... with 140 more rows
+
+###也可以自定义函数
+rename_with(iris, function(x){
+  gsub(&quot;.&quot;,&quot;_&quot;,x,fixed = TRUE)
+  },starts_with(&quot;Petal&quot;))
+&gt;&gt; # A tibble: 150 x 5
+&gt;&gt;    Sepal.Length Sepal.Width Petal_Length Petal_Width Species
+&gt;&gt;           &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt; &lt;fct&gt;  
+&gt;&gt;  1          5.1         3.5          1.4         0.2 setosa 
+&gt;&gt;  2          4.9         3            1.4         0.2 setosa 
+&gt;&gt;  3          4.7         3.2          1.3         0.2 setosa 
+&gt;&gt;  4          4.6         3.1          1.5         0.2 setosa 
+&gt;&gt;  5          5           3.6          1.4         0.2 setosa 
+&gt;&gt;  6          5.4         3.9          1.7         0.4 setosa 
+&gt;&gt;  7          4.6         3.4          1.4         0.3 setosa 
+&gt;&gt;  8          5           3.4          1.5         0.2 setosa 
+&gt;&gt;  9          4.4         2.9          1.4         0.2 setosa 
+&gt;&gt; 10          4.9         3.1          1.5         0.1 setosa 
+&gt;&gt; # ... with 140 more rows
+
+###或者公式类型的函数
+rename_with(iris, ~ tolower(gsub(&quot;.&quot;, &quot;_&quot;, .x, fixed = TRUE)))
+&gt;&gt; # A tibble: 150 x 5
+&gt;&gt;    sepal_length sepal_width petal_length petal_width species
+&gt;&gt;           &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt; &lt;fct&gt;  
+&gt;&gt;  1          5.1         3.5          1.4         0.2 setosa 
+&gt;&gt;  2          4.9         3            1.4         0.2 setosa 
+&gt;&gt;  3          4.7         3.2          1.3         0.2 setosa 
+&gt;&gt;  4          4.6         3.1          1.5         0.2 setosa 
+&gt;&gt;  5          5           3.6          1.4         0.2 setosa 
+&gt;&gt;  6          5.4         3.9          1.7         0.4 setosa 
+&gt;&gt;  7          4.6         3.4          1.4         0.3 setosa 
+&gt;&gt;  8          5           3.4          1.5         0.2 setosa 
+&gt;&gt;  9          4.4         2.9          1.4         0.2 setosa 
+&gt;&gt; 10          4.9         3.1          1.5         0.1 setosa 
+&gt;&gt; # ... with 140 more rows</code></pre>
+<p>在base R中可以使用<code>setNames()</code>来实现：</p>
+<pre class="r"><code>setNames(iris, toupper(names(iris)))
+&gt;&gt; # A tibble: 150 x 5
+&gt;&gt;    SEPAL.LENGTH SEPAL.WIDTH PETAL.LENGTH PETAL.WIDTH SPECIES
+&gt;&gt;           &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt; &lt;fct&gt;  
+&gt;&gt;  1          5.1         3.5          1.4         0.2 setosa 
+&gt;&gt;  2          4.9         3            1.4         0.2 setosa 
+&gt;&gt;  3          4.7         3.2          1.3         0.2 setosa 
+&gt;&gt;  4          4.6         3.1          1.5         0.2 setosa 
+&gt;&gt;  5          5           3.6          1.4         0.2 setosa 
+&gt;&gt;  6          5.4         3.9          1.7         0.4 setosa 
+&gt;&gt;  7          4.6         3.4          1.4         0.3 setosa 
+&gt;&gt;  8          5           3.4          1.5         0.2 setosa 
+&gt;&gt;  9          4.4         2.9          1.4         0.2 setosa 
+&gt;&gt; 10          4.9         3.1          1.5         0.1 setosa 
+&gt;&gt; # ... with 140 more rows</code></pre>
+</div>
+<div id="select通过列名选择变量" class="section level3">
+<h3><code>select()</code>通过列名选择变量</h3>
+<p><code>dplyr::select()</code>根据列名，位置，和列名相关的函数或者其他特征来选择列：</p>
+<pre class="r"><code>###位置
+iris %&gt;% select(1:3)
+&gt;&gt; # A tibble: 150 x 3
+&gt;&gt;    Sepal.Length Sepal.Width Petal.Length
+&gt;&gt;           &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;
+&gt;&gt;  1          5.1         3.5          1.4
+&gt;&gt;  2          4.9         3            1.4
+&gt;&gt;  3          4.7         3.2          1.3
+&gt;&gt;  4          4.6         3.1          1.5
+&gt;&gt;  5          5           3.6          1.4
+&gt;&gt;  6          5.4         3.9          1.7
+&gt;&gt;  7          4.6         3.4          1.4
+&gt;&gt;  8          5           3.4          1.5
+&gt;&gt;  9          4.4         2.9          1.4
+&gt;&gt; 10          4.9         3.1          1.5
+&gt;&gt; # ... with 140 more rows
+
+##列名
+iris %&gt;% select(Species, Sepal.Length)
+&gt;&gt; # A tibble: 150 x 2
+&gt;&gt;    Species Sepal.Length
+&gt;&gt;    &lt;fct&gt;          &lt;dbl&gt;
+&gt;&gt;  1 setosa           5.1
+&gt;&gt;  2 setosa           4.9
+&gt;&gt;  3 setosa           4.7
+&gt;&gt;  4 setosa           4.6
+&gt;&gt;  5 setosa           5  
+&gt;&gt;  6 setosa           5.4
+&gt;&gt;  7 setosa           4.6
+&gt;&gt;  8 setosa           5  
+&gt;&gt;  9 setosa           4.4
+&gt;&gt; 10 setosa           4.9
+&gt;&gt; # ... with 140 more rows
+
+##函数
+iris %&gt;% select(starts_with(&quot;Petal&quot;))
+&gt;&gt; # A tibble: 150 x 2
+&gt;&gt;    Petal.Length Petal.Width
+&gt;&gt;           &lt;dbl&gt;       &lt;dbl&gt;
+&gt;&gt;  1          1.4         0.2
+&gt;&gt;  2          1.4         0.2
+&gt;&gt;  3          1.3         0.2
+&gt;&gt;  4          1.5         0.2
+&gt;&gt;  5          1.4         0.2
+&gt;&gt;  6          1.7         0.4
+&gt;&gt;  7          1.4         0.3
+&gt;&gt;  8          1.5         0.2
+&gt;&gt;  9          1.4         0.2
+&gt;&gt; 10          1.5         0.1
+&gt;&gt; # ... with 140 more rows
+iris %&gt;% select(where(is.factor))
+&gt;&gt; # A tibble: 150 x 1
+&gt;&gt;    Species
+&gt;&gt;    &lt;fct&gt;  
+&gt;&gt;  1 setosa 
+&gt;&gt;  2 setosa 
+&gt;&gt;  3 setosa 
+&gt;&gt;  4 setosa 
+&gt;&gt;  5 setosa 
+&gt;&gt;  6 setosa 
+&gt;&gt;  7 setosa 
+&gt;&gt;  8 setosa 
+&gt;&gt;  9 setosa 
+&gt;&gt; 10 setosa 
+&gt;&gt; # ... with 140 more rows</code></pre>
+<p>在base R中通过位置选择变量是比较直接的:</p>
+<pre class="r"><code>iris[1:3]##单个参数是取列的
+&gt;&gt; # A tibble: 150 x 3
+&gt;&gt;    Sepal.Length Sepal.Width Petal.Length
+&gt;&gt;           &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;
+&gt;&gt;  1          5.1         3.5          1.4
+&gt;&gt;  2          4.9         3            1.4
+&gt;&gt;  3          4.7         3.2          1.3
+&gt;&gt;  4          4.6         3.1          1.5
+&gt;&gt;  5          5           3.6          1.4
+&gt;&gt;  6          5.4         3.9          1.7
+&gt;&gt;  7          4.6         3.4          1.4
+&gt;&gt;  8          5           3.4          1.5
+&gt;&gt;  9          4.4         2.9          1.4
+&gt;&gt; 10          4.9         3.1          1.5
+&gt;&gt; # ... with 140 more rows
+
+iris[1:3, , drop = FALSE]##也可以加多个参数，第二个参数是列
+&gt;&gt; # A tibble: 3 x 5
+&gt;&gt;   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+&gt;&gt;          &lt;dbl&gt;       &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt; &lt;fct&gt;  
+&gt;&gt; 1          5.1         3.5          1.4         0.2 setosa 
+&gt;&gt; 2          4.9         3            1.4         0.2 setosa 
+&gt;&gt; 3          4.7         3.2          1.3         0.2 setosa</code></pre>
+<p>按照名称选择列可以有两种选择：</p>
+<pre class="r"><code>###直接按照字符向量选择
+iris[c(&quot;Species&quot;, &quot;Sepal.Length&quot;)]
+&gt;&gt; # A tibble: 150 x 2
+&gt;&gt;    Species Sepal.Length
+&gt;&gt;    &lt;fct&gt;          &lt;dbl&gt;
+&gt;&gt;  1 setosa           5.1
+&gt;&gt;  2 setosa           4.9
+&gt;&gt;  3 setosa           4.7
+&gt;&gt;  4 setosa           4.6
+&gt;&gt;  5 setosa           5  
+&gt;&gt;  6 setosa           5.4
+&gt;&gt;  7 setosa           4.6
+&gt;&gt;  8 setosa           5  
+&gt;&gt;  9 setosa           4.4
+&gt;&gt; 10 setosa           4.9
+&gt;&gt; # ... with 140 more rows
+
+###使用subset函数，subset使用了和dplyr相同的机制(元编程)
+subset(iris, select = c(Species, Sepal.Length))
+&gt;&gt; # A tibble: 150 x 2
+&gt;&gt;    Species Sepal.Length
+&gt;&gt;    &lt;fct&gt;          &lt;dbl&gt;
+&gt;&gt;  1 setosa           5.1
+&gt;&gt;  2 setosa           4.9
+&gt;&gt;  3 setosa           4.7
+&gt;&gt;  4 setosa           4.6
+&gt;&gt;  5 setosa           5  
+&gt;&gt;  6 setosa           5.4
+&gt;&gt;  7 setosa           4.6
+&gt;&gt;  8 setosa           5  
+&gt;&gt;  9 setosa           4.4
+&gt;&gt; 10 setosa           4.9
+&gt;&gt; # ... with 140 more rows</code></pre>
+<p>通过名称的函数来选择列，可以使用<code>grep</code>函数来匹配：</p>
+<pre class="r"><code>iris[grep(&quot;^Petal&quot;, names(iris))]
+&gt;&gt; # A tibble: 150 x 2
+&gt;&gt;    Petal.Length Petal.Width
+&gt;&gt;           &lt;dbl&gt;       &lt;dbl&gt;
+&gt;&gt;  1          1.4         0.2
+&gt;&gt;  2          1.4         0.2
+&gt;&gt;  3          1.3         0.2
+&gt;&gt;  4          1.5         0.2
+&gt;&gt;  5          1.4         0.2
+&gt;&gt;  6          1.7         0.4
+&gt;&gt;  7          1.4         0.3
+&gt;&gt;  8          1.5         0.2
+&gt;&gt;  9          1.4         0.2
+&gt;&gt; 10          1.5         0.1
+&gt;&gt; # ... with 140 more rows</code></pre>
+<p>也可以通过Filter函数根据变量的类型来选择列：Filter是高阶函数，接受别的函数作为参数，高阶函数的内容见<a href="https://wutaoblog.com.cn/p/meta_r_prom/">review</a></p>
+<pre class="r"><code>###
+Filter(is.factor,iris)
+&gt;&gt; # A tibble: 150 x 1
+&gt;&gt;    Species
+&gt;&gt;    &lt;fct&gt;  
+&gt;&gt;  1 setosa 
+&gt;&gt;  2 setosa 
+&gt;&gt;  3 setosa 
+&gt;&gt;  4 setosa 
+&gt;&gt;  5 setosa 
+&gt;&gt;  6 setosa 
+&gt;&gt;  7 setosa 
+&gt;&gt;  8 setosa 
+&gt;&gt;  9 setosa 
+&gt;&gt; 10 setosa 
+&gt;&gt; # ... with 140 more rows</code></pre>
+</div>
+<div id="summarise将多个值汇总成单个值" class="section level3">
+<h3><code>summarise()</code>将多个值汇总成单个值</h3>
+<p><code>dplyr::summarise</code> 计算每个组别的汇总信息：</p>
+<pre class="r"><code>mtcars %&gt;% 
+  group_by(cyl) %&gt;% 
+  summarise(mean = mean(disp), n = n())
+&gt;&gt; `summarise()` ungrouping output (override with `.groups` argument)
+&gt;&gt; # A tibble: 3 x 3
+&gt;&gt;     cyl  mean     n
+&gt;&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+&gt;&gt; 1     4  105.    11
+&gt;&gt; 2     6  183.     7
+&gt;&gt; 3     8  353.    14</code></pre>
+<p>在base R里面比较相似的是by函数，但是by函数返回的是list：</p>
+<pre class="r"><code>###先来看一下by函数的用法
+##by(data, data$byvar, FUN)
+##data是数据，data$byvar是分组依据，fun是函数
+
+
+mtcars_by &lt;- by(mtcars, mtcars$cyl, function(df) {
+  with(df, data.frame(cyl = cyl[[1]], mean = mean(disp), n = nrow(df)))
+})
+mtcars_by
+&gt;&gt; mtcars$cyl: 4
+&gt;&gt;   cyl     mean  n
+&gt;&gt; 1   4 105.1364 11
+&gt;&gt; ------------------------------------------------------------ 
+&gt;&gt; mtcars$cyl: 6
+&gt;&gt;   cyl     mean n
+&gt;&gt; 1   6 183.3143 7
+&gt;&gt; ------------------------------------------------------------ 
+&gt;&gt; mtcars$cyl: 8
+&gt;&gt;   cyl  mean  n
+&gt;&gt; 1   8 353.1 14</code></pre>
+<p>我们可以使用<a href="">do.call函数</a>来将这个列表合并成数据框：</p>
+<pre class="r"><code>do.call(rbind,mtcars_by)
+&gt;&gt;   cyl     mean  n
+&gt;&gt; 4   4 105.1364 11
+&gt;&gt; 6   6 183.3143  7
+&gt;&gt; 8   8 353.1000 14</code></pre>
+</div>
+<div id="slice-根据位置选择行" class="section level3">
+<h3><code>slice()</code> 根据位置选择行</h3>
+<pre class="r"><code>###n表示行数
+slice(mtcars, 25:n())
+&gt;&gt; # A tibble: 8 x 13
+&gt;&gt;     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb  cy12  cy14
+&gt;&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt; 1  19.2     8 400     175  3.08  3.84  17.0     0     0     3     2    16    32
+&gt;&gt; 2  27.3     4  79      66  4.08  1.94  18.9     1     1     4     1     8    16
+&gt;&gt; 3  26       4 120.     91  4.43  2.14  16.7     0     1     5     2     8    16
+&gt;&gt; 4  30.4     4  95.1   113  3.77  1.51  16.9     1     1     5     2     8    16
+&gt;&gt; 5  15.8     8 351     264  4.22  3.17  14.5     0     1     5     4    16    32
+&gt;&gt; 6  19.7     6 145     175  3.62  2.77  15.5     0     1     5     6    12    24
+&gt;&gt; 7  15       8 301     335  3.54  3.57  14.6     0     1     5     8    16    32
+&gt;&gt; 8  21.4     4 121     109  4.11  2.78  18.6     1     1     4     2     8    16</code></pre>
+<p>在base R中可以直接使用[来选取：</p>
+<pre class="r"><code>mtcars[25:nrow(mtcars), , drop = FALSE]
+&gt;&gt; # A tibble: 8 x 13
+&gt;&gt;     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb  cy12  cy14
+&gt;&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt; 1  19.2     8 400     175  3.08  3.84  17.0     0     0     3     2    16    32
+&gt;&gt; 2  27.3     4  79      66  4.08  1.94  18.9     1     1     4     1     8    16
+&gt;&gt; 3  26       4 120.     91  4.43  2.14  16.7     0     1     5     2     8    16
+&gt;&gt; 4  30.4     4  95.1   113  3.77  1.51  16.9     1     1     5     2     8    16
+&gt;&gt; 5  15.8     8 351     264  4.22  3.17  14.5     0     1     5     4    16    32
+&gt;&gt; 6  19.7     6 145     175  3.62  2.77  15.5     0     1     5     6    12    24
+&gt;&gt; 7  15       8 301     335  3.54  3.57  14.6     0     1     5     8    16    32
+&gt;&gt; 8  21.4     4 121     109  4.11  2.78  18.6     1     1     4     2     8    16</code></pre>
+</div>
+</div>
+<div id="two-table-verbs" class="section level2">
+<h2>Two-table verbs</h2>
+<p>two-table verbs指的是合并两个数据框的操作，在dplyr中使用*_join操作代替base R中的各种merge操作：</p>
+<table>
+<thead>
+<tr class="header">
+<th>dplyr</th>
+<th>base</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>inner_join(df1, df2)</code></td>
+<td><code>merge(df1, df2)</code></td>
+</tr>
+<tr class="even">
+<td><code>left_join(df1, df2)</code></td>
+<td><code>merge(df1, df2, all.x = TRUE)</code></td>
+</tr>
+<tr class="odd">
+<td><code>right_join(df1, df2)</code></td>
+<td><code>merge(df1, df2, all.y = TRUE)</code></td>
+</tr>
+<tr class="even">
+<td><code>full_join(df1, df2)</code></td>
+<td><code>merge(df1, df2, all = TRUE)</code></td>
+</tr>
+<tr class="odd">
+<td><code>semi_join(df1, df2)</code></td>
+<td><code>df1[df1$x %in% df2$x, , drop = FALSE]</code></td>
+</tr>
+<tr class="even">
+<td><code>anti_join(df1, df2)</code></td>
+<td><code>df1[!df1$x %in% df2$x, , drop = FALSE]</code></td>
+</tr>
+</tbody>
+</table>
+<div id="mutating-joins" class="section level3">
+<h3>mutating joins</h3>
 </div>
 </div>

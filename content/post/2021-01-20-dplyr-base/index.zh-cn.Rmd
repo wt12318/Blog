@@ -155,3 +155,245 @@ starwars[starwars$species == "Human",]
 ```{r ex12}
 starwars[which(starwars$species == "Human"), , drop = FALSE]
 ```
+
+### `mutate()`创建或转化变量
+
+`dplyr::mutate`从已存在的变量中创建新的变量
+
+```{r ex13}
+df %>% mutate(z = x + y, z2 = z ^ 2)
+```
+
+在base R里面相似的有transform函数，但是要注意的是transform函数不能使用刚创建的变量，只能使用已有的变量：
+
+```{r ex14,error=TRUE}
+head(transform(df,z=x+y,z2=z^2))
+
+head(transform(df,z=x+y,z2=(x+y)^2))
+```
+
+也可以使用`$<-`来创建新的变量：
+
+```{r ex15}
+mtcars$cy12 <- mtcars$cyl * 2
+mtcars$cy14 <- mtcars$cy12 *2
+```
+
+当应用到分组的数据框上，mutate可以对每个组别计算新的变量：
+
+```{r ex16}
+gf <- tibble(g = c(1, 1, 2, 2), x = c(0.5, 1.5, 2.5, 3.5))
+gf %>% 
+  group_by(g) %>% 
+  mutate(x_mean = mean(x), x_rank = rank(x))
+```
+
+在baseR中可以用使用`ave`函数
+
+```{r ex17}
+transform(gf, 
+  x_mean = ave(x, g, FUN = mean), 
+  x_rank = ave(x, g, FUN = rank)
+)
+```
+
+### `pull()` 抽提变量
+
+`dplyr::pull()`可以通过名称或者位置提取变量：
+
+```{r ex18}
+mtcars %>% pull(1)
+
+mtcars %>% pull(cyl)
+```
+
+在base R中相当于[[和\$:
+
+```{r ex19}
+mtcars[["cyl"]]
+mtcars[[1]]
+
+mtcars$cyl
+```
+
+### `relocate()` 改变列的顺序
+
+`dplyr::relocate()` 可以方便的将列移到新的位置(默认是最前面,下面要讲的`select`只能将列移到最前面):
+
+```{r ex20}
+# to front
+mtcars %>% relocate(gear, carb) 
+
+# to back
+mtcars %>% relocate(mpg, cyl, .after = last_col()) 
+
+# to after disp
+mtcars %>% relocate(mpg, cyl, .after = disp) 
+
+```
+
+在base R中就有一点复杂：
+
+```{r ex21}
+##to front
+mtcars[union(c("gear", "carb"), names(mtcars))]
+
+###to back
+##先将要移动的列去掉，再重组到后面
+to_back <- c("mpg", "cyl")
+mtcars[c(setdiff(names(mtcars), to_back), to_back)]
+```
+
+### `rename()` 重命名变量
+
+`dplyr::rename()`可以通过旧的名称或者位置来重命名变量：
+
+```{r ex22}
+iris %>% rename(sepal_length = Sepal.Length, sepal_width = 2)
+```
+
+在base R中根据位置来重命名变量是比较直接的：
+
+```{r ex23}
+iris2 <- iris
+names(iris2)[2] <- "sepal_width"
+```
+
+通过旧的变量名来重命名有一点繁琐：
+
+```{r ex24}
+names(iris2)[names(iris2) == "Sepal.Length"] <- "sepal_length"
+```
+
+### `rename_with()`通过函数来重命名变量
+
+`dplyr::rename_with()`通过函数来转化列名：
+
+```{r ex25}
+iris %>% rename_with(toupper)
+
+###也可以选择范围，默认是所有列
+rename_with(iris, toupper, starts_with("Petal"))
+
+###也可以自定义函数
+rename_with(iris, function(x){
+  gsub(".","_",x,fixed = TRUE)
+  },starts_with("Petal"))
+
+###或者公式类型的函数
+rename_with(iris, ~ tolower(gsub(".", "_", .x, fixed = TRUE)))
+```
+
+在base R中可以使用`setNames()`来实现：
+
+```{r ex26}
+setNames(iris, toupper(names(iris)))
+```
+
+### `select()`通过列名选择变量
+
+`dplyr::select()`根据列名，位置，和列名相关的函数或者其他特征来选择列：
+
+```{r ex27}
+###位置
+iris %>% select(1:3)
+
+##列名
+iris %>% select(Species, Sepal.Length)
+
+##函数
+iris %>% select(starts_with("Petal"))
+iris %>% select(where(is.factor))
+```
+
+在base R中通过位置选择变量是比较直接的:
+
+```{r}
+iris[1:3]##单个参数是取列的
+
+iris[1:3, , drop = FALSE]##也可以加多个参数，第二个参数是列
+```
+
+按照名称选择列可以有两种选择：
+
+```{r}
+###直接按照字符向量选择
+iris[c("Species", "Sepal.Length")]
+
+###使用subset函数，subset使用了和dplyr相同的机制(元编程)
+subset(iris, select = c(Species, Sepal.Length))
+```
+
+通过名称的函数来选择列，可以使用`grep`函数来匹配：
+
+```{r}
+iris[grep("^Petal", names(iris))]
+```
+
+也可以通过Filter函数根据变量的类型来选择列：Filter是高阶函数，接受别的函数作为参数，高阶函数的内容见[review](https://wutaoblog.com.cn/p/meta_r_prom/)
+
+```{r}
+###
+Filter(is.factor,iris)
+```
+
+### `summarise()`将多个值汇总成单个值
+
+`dplyr::summarise` 计算每个组别的汇总信息：
+
+```{r}
+mtcars %>% 
+  group_by(cyl) %>% 
+  summarise(mean = mean(disp), n = n())
+```
+
+在base R里面比较相似的是by函数，但是by函数返回的是list：
+
+```{r}
+###先来看一下by函数的用法
+##by(data, data$byvar, FUN)
+##data是数据，data$byvar是分组依据，fun是函数
+
+
+mtcars_by <- by(mtcars, mtcars$cyl, function(df) {
+  with(df, data.frame(cyl = cyl[[1]], mean = mean(disp), n = nrow(df)))
+})
+mtcars_by
+```
+
+我们可以使用[do.call函数]()来将这个列表合并成数据框：
+
+```{r}
+do.call(rbind,mtcars_by)
+```
+
+### `slice()` 根据位置选择行
+
+```{r}
+###n表示行数
+slice(mtcars, 25:n())
+```
+
+在base R中可以直接使用[来选取：
+
+```{r}
+mtcars[25:nrow(mtcars), , drop = FALSE]
+```
+
+## Two-table verbs
+
+two-table verbs指的是合并两个数据框的操作，在dplyr中使用\*\_join操作代替base R中的各种merge操作：
+
+
+| dplyr                  | base                                    |
+|------------------------|-----------------------------------------|
+| `inner_join(df1, df2)` |`merge(df1, df2)`                        | 
+| `left_join(df1, df2) ` |`merge(df1, df2, all.x = TRUE)`          | 
+| `right_join(df1, df2)` |`merge(df1, df2, all.y = TRUE)`          | 
+| `full_join(df1, df2)`  |`merge(df1, df2, all = TRUE)`            | 
+| `semi_join(df1, df2)`  |`df1[df1$x %in% df2$x, , drop = FALSE]`  | 
+| `anti_join(df1, df2)`  |`df1[!df1$x %in% df2$x, , drop = FALSE]` | 
+
+### mutating joins
+
+
