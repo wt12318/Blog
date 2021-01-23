@@ -384,16 +384,11 @@ mtcars[25:nrow(mtcars), , drop = FALSE]
 
 two-table verbs指的是合并两个数据框的操作，在dplyr中使用\*\_join操作代替base R中的各种merge操作：
 
-
-| dplyr                  | base                                    |
-|------------------------|-----------------------------------------|
-| `inner_join(df1, df2)` |`merge(df1, df2)`                        | 
-| `left_join(df1, df2) ` |`merge(df1, df2, all.x = TRUE)`          | 
-| `right_join(df1, df2)` |`merge(df1, df2, all.y = TRUE)`          | 
-| `full_join(df1, df2)`  |`merge(df1, df2, all = TRUE)`            | 
-| `semi_join(df1, df2)`  |`df1[df1$x %in% df2$x, , drop = FALSE]`  | 
-| `anti_join(df1, df2)`  |`df1[!df1$x %in% df2$x, , drop = FALSE]` | 
-
-### mutating joins
-
-
+| dplyr                  | base                                     |
+|------------------------|------------------------------------------|
+| `inner_join(df1, df2)` | `merge(df1, df2)`                        |
+| `left_join(df1, df2)`  | `merge(df1, df2, all.x = TRUE)`          |
+| `right_join(df1, df2)` | `merge(df1, df2, all.y = TRUE)`          |
+| `full_join(df1, df2)`  | `merge(df1, df2, all = TRUE)`            |
+| `semi_join(df1, df2)`  | `df1[df1$x %in% df2$x, , drop = FALSE]`  |
+| `anti_join(df1, df2)`  | `df1[!df1$x %in% df2$x, , drop = FALSE]` |
