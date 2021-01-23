@@ -1,0 +1,147 @@
+---
+title: 【dplyr】Column-wise operations---across
+author: wutao
+date: '2021-01-23'
+slug: dplyr_col_wise
+categories:
+  - R
+tags:
+  - R
+  - notes
+image : "across.png"
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>我们在数据分析过程中经常要做的一件事就是对数据框的多列进行同样的操作，但是如果采用粘贴复制的方法比较繁琐也容易出错，比如：</p>
+<pre class="r"><code>df %&gt;% 
+  group_by(g1, g2) %&gt;% 
+  summarise(a = mean(a), b = mean(b), c = mean(c), d = mean(d))</code></pre>
+<p>使用across函数就可以较简洁的重写上面的代码：</p>
+<pre class="r"><code>df %&gt;% 
+  group_by(g1, g2) %&gt;% 
+  summarise(across(a:d, mean))</code></pre>
+<div id="基础用法" class="section level2">
+<h2>基础用法</h2>
+<p><code>across</code>有两个基本的参数：</p>
+<ul>
+<li><p>第一个参数是<code>.cols</code> 选择想要操作的列，使用的方法是<em>tidy selection</em> (也就是和select一样，可以根据位置/名称/类型来选择)</p></li>
+<li><p>第二个参数是<code>.fns</code> 是对每列进行操作的函数，可以是purrr风格的公式(比如~.x /2，具体见<a href="sss">迭代—purrr</a>)</p></li>
+</ul>
+<p>across最常见的是与summarise一起使用(别的动词也可以)：</p>
+<pre class="r"><code>starwars %&gt;% 
+  summarise(across(where(is.character), ~ length(unique(.x))))
+&gt;&gt; # A tibble: 1 x 8
+&gt;&gt;    name hair_color skin_color eye_color   sex gender homeworld species
+&gt;&gt;   &lt;int&gt;      &lt;int&gt;      &lt;int&gt;     &lt;int&gt; &lt;int&gt;  &lt;int&gt;     &lt;int&gt;   &lt;int&gt;
+&gt;&gt; 1    87         13         31        15     5      3        49      38
+
+starwars %&gt;% 
+  group_by(species) %&gt;% 
+  filter(n() &gt; 1) %&gt;% 
+  summarise(across(c(sex, gender, homeworld), ~ length(unique(.x))))
+&gt;&gt; `summarise()` ungrouping output (override with `.groups` argument)
+&gt;&gt; # A tibble: 9 x 4
+&gt;&gt;   species    sex gender homeworld
+&gt;&gt;   &lt;chr&gt;    &lt;int&gt;  &lt;int&gt;     &lt;int&gt;
+&gt;&gt; 1 Droid        1      2         3
+&gt;&gt; 2 Gungan       1      1         1
+&gt;&gt; 3 Human        2      2        16
+&gt;&gt; 4 Kaminoan     2      2         1
+&gt;&gt; 5 Mirialan     1      1         1
+&gt;&gt; 6 Twi&#39;lek      2      2         1
+&gt;&gt; 7 Wookiee      1      1         1
+&gt;&gt; 8 Zabrak       1      1         2
+&gt;&gt; 9 &lt;NA&gt;         1      1         3
+
+starwars %&gt;% 
+  group_by(homeworld) %&gt;% 
+  filter(n() &gt; 1) %&gt;% 
+  summarise(across(where(is.numeric), ~ mean(.x, na.rm = TRUE)))
+&gt;&gt; `summarise()` ungrouping output (override with `.groups` argument)
+&gt;&gt; # A tibble: 10 x 4
+&gt;&gt;    homeworld height  mass birth_year
+&gt;&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;
+&gt;&gt;  1 Alderaan    176.  64         43  
+&gt;&gt;  2 Corellia    175   78.5       25  
+&gt;&gt;  3 Coruscant   174.  50         91  
+&gt;&gt;  4 Kamino      208.  83.1       31.5
+&gt;&gt;  5 Kashyyyk    231  124        200  
+&gt;&gt;  6 Mirial      168   53.1       49  
+&gt;&gt;  7 Naboo       175.  64.2       55  
+&gt;&gt;  8 Ryloth      179   55         48  
+&gt;&gt;  9 Tatooine    170.  85.4       54.6
+&gt;&gt; 10 &lt;NA&gt;        139.  82        334.</code></pre>
+<p>需要注意的是：across在进行操作的时候不会选择分组变量：</p>
+<pre class="r"><code>df &lt;- data.frame(g = c(1, 1, 2), x = c(-1, 1, 3), y = c(-1, -4, -9))
+df %&gt;% 
+  group_by(g) %&gt;% 
+  summarise(across(where(is.numeric), sum))
+&gt;&gt; `summarise()` ungrouping output (override with `.groups` argument)
+&gt;&gt; # A tibble: 2 x 3
+&gt;&gt;       g     x     y
+&gt;&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&gt;&gt; 1     1     0    -5
+&gt;&gt; 2     2     3    -9</code></pre>
+<div id="多个函数" class="section level3">
+<h3>多个函数</h3>
+<p>也可以使用多个函数对列进行操作，只需要在第二个参数中提供具名函数的列表：</p>
+<pre class="r"><code>min_max &lt;- list(
+  min = ~min(.x, na.rm = TRUE), 
+  max = ~max(.x, na.rm = TRUE)
+)
+starwars %&gt;% summarise(across(where(is.numeric), min_max))
+&gt;&gt; # A tibble: 1 x 6
+&gt;&gt;   height_min height_max mass_min mass_max birth_year_min birth_year_max
+&gt;&gt;        &lt;int&gt;      &lt;int&gt;    &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;
+&gt;&gt; 1         66        264       15     1358              8            896
+
+starwars %&gt;% summarise(across(c(height, mass, birth_year), min_max))
+&gt;&gt; # A tibble: 1 x 6
+&gt;&gt;   height_min height_max mass_min mass_max birth_year_min birth_year_max
+&gt;&gt;        &lt;int&gt;      &lt;int&gt;    &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;
+&gt;&gt; 1         66        264       15     1358              8            896</code></pre>
+<p>我们可以看到默认的输出结果的列名是原来的列名加上函数的名称中间用下划线分割，也可以通过<code>.name</code>参数来指定输出的名称(以<code>glue</code>包中的格式)：</p>
+<pre class="r"><code>starwars %&gt;% summarise(across(where(is.numeric), min_max, .names = &quot;{.fn}.{.col}&quot;))##调换位置，并以点号分割
+&gt;&gt; # A tibble: 1 x 6
+&gt;&gt;   min.height max.height min.mass max.mass min.birth_year max.birth_year
+&gt;&gt;        &lt;int&gt;      &lt;int&gt;    &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;
+&gt;&gt; 1         66        264       15     1358              8            896
+
+starwars %&gt;% summarise(across(c(height, mass, birth_year), min_max, .names = &quot;{.fn}.{.col}&quot;))
+&gt;&gt; # A tibble: 1 x 6
+&gt;&gt;   min.height max.height min.mass max.mass min.birth_year max.birth_year
+&gt;&gt;        &lt;int&gt;      &lt;int&gt;    &lt;dbl&gt;    &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;
+&gt;&gt; 1         66        264       15     1358              8            896</code></pre>
+<p>如果想要同一个函数操作得到的结果放在一起，我们可以把上面两个函数拆开执行：</p>
+<pre class="r"><code>starwars %&gt;% summarise(
+  across(c(height, mass, birth_year), ~min(.x, na.rm = TRUE), .names = &quot;min_{.col}&quot;),
+  across(c(height, mass, birth_year), ~max(.x, na.rm = TRUE), .names = &quot;max_{.col}&quot;)
+)
+&gt;&gt; # A tibble: 1 x 6
+&gt;&gt;   min_height min_mass min_birth_year max_height max_mass max_birth_year
+&gt;&gt;        &lt;int&gt;    &lt;dbl&gt;          &lt;dbl&gt;      &lt;int&gt;    &lt;dbl&gt;          &lt;dbl&gt;
+&gt;&gt; 1         66       15              8        264     1358            896</code></pre>
+<p>注意：在上面的代码中不能直接使用<code>where(is.numeric)</code> 因为第二个across会对新生成的数值变量(“min_height”, “min_mass” and “min_birth_year”)进行操作:</p>
+<pre class="r"><code>starwars %&gt;% summarise(
+  across(where(is.numeric), ~min(.x, na.rm = TRUE), .names = &quot;min_{.col}&quot;),
+    across(where(is.numeric), ~max(.x, na.rm = TRUE), .names = &quot;max_{.col}&quot;)  
+)
+&gt;&gt; # A tibble: 1 x 9
+&gt;&gt;   min_height min_mass min_birth_year max_height max_mass max_birth_year
+&gt;&gt;        &lt;int&gt;    &lt;dbl&gt;          &lt;dbl&gt;      &lt;int&gt;    &lt;dbl&gt;          &lt;dbl&gt;
+&gt;&gt; 1         66       15              8        264     1358            896
+&gt;&gt; # ... with 3 more variables: max_min_height &lt;int&gt;, max_min_mass &lt;dbl&gt;,
+&gt;&gt; #   max_min_birth_year &lt;dbl&gt;</code></pre>
+<p>可以看到生成了额外的三列：max_min_height &lt;int&gt;, max_min_mass &lt;dbl&gt;, max_min_birth_year &lt;dbl&gt;</p>
+<p>另外，我们也可以使用<code>relocate</code>函数来调整列的顺序：</p>
+<pre class="r"><code>starwars %&gt;% 
+  summarise(across(where(is.numeric), min_max, .names = &quot;{.fn}.{.col}&quot;)) %&gt;% 
+  relocate(starts_with(&quot;min&quot;))
+&gt;&gt; # A tibble: 1 x 6
+&gt;&gt;   min.height min.mass min.birth_year max.height max.mass max.birth_year
+&gt;&gt;        &lt;int&gt;    &lt;dbl&gt;          &lt;dbl&gt;      &lt;int&gt;    &lt;dbl&gt;          &lt;dbl&gt;
+&gt;&gt; 1         66       15              8        264     1358            896</code></pre>
+</div>
+</div>

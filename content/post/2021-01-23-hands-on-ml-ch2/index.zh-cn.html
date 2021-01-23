@@ -1,0 +1,287 @@
+---
+title: 【Ch2】Hands on Machine Learnig
+author: wutao
+date: '2021-01-23'
+slug: hands_on_ml_ch2
+categories:
+  - reading notes
+tags:
+  - ML
+image : "image1.png"
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>本章展示了一个实例项目的完整流程，主要步骤包括：</p>
+<ul>
+<li><p>组织项目(look at the big picture)</p></li>
+<li><p>获取数据</p></li>
+<li><p>对数据进行探索和可视化</p></li>
+<li><p>对数据进行预处理</p></li>
+<li><p>选择模型进行训练</p></li>
+<li><p>微调模型</p></li>
+<li><p>展示结果</p></li>
+<li><p>启动，监控并维护系统</p></li>
+</ul>
+<p>本章使用的数据为加州房屋价格数据集，来自1990年的人口普查数据,包括每个地区(人口普查单位)的中位数收入，人口，中位数住房价格等信息，需要建立一个模型来预测住房价格</p>
+<div id="look-at-the-big-picture" class="section level2">
+<h2>Look at the Big Picture</h2>
+<p>第一步就是<strong>确定问题</strong> ：</p>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210123145823410.png" /></p>
+<p>这个项目是处于一个数据管线(pipeline)上的一环，目的是预测出地区的住房价格以供后续的投资决策参考</p>
+<p>有关机器学习系统的问题包括：这个系统是监督的还是非监督的还是增强学习类型；是分类任务还是回归任务还是其他；需要使用批量学习还是在线学习</p>
+<p>这个任务是典型的监督学习，回归任务(单变量回归)；由于没有连续的数据流进入系统，所以采用批量学习(batch learning)</p>
+<p>第二步是选择一个<strong>性能衡量指标</strong>，对于回归问题最常用的是RMSE(Root Mean Square Error,均方根误差):</p>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210123152509580.png" /></p>
+<p>也可以使用其他的函数，比如，如果数据中离群点比较多，可以使用MAE(mean absolute error,平均绝对误差)，这个衡量相较RMSE对离群点更不敏感</p>
+<p>第三步是 <strong>再次检查假设</strong> 帮助我们较早的发现可能的问题，比如如果系统的下游需要的不是数值而是价格的分类(低中高)，那么这个问题就变成分类问题而不是回归问题了；所以需要在项目开始前将这些问题考虑到，避免时间精力的浪费</p>
+</div>
+<div id="get-the-data" class="section level2">
+<h2>Get the Data</h2>
+<p>编写函数来自动下载数据并解压：</p>
+<pre class="python"><code>import os
+import tarfile
+import urllib
+import urllib.request
+
+DOWNLOAD_ROOT = &quot;https://raw.githubusercontent.com/ageron/handson-ml2/master/&quot;
+HOUSING_PATH = os.path.join(&quot;../test/datasets&quot;, &quot;housing&quot;)
+HOUSING_URL = DOWNLOAD_ROOT + &quot;datasets/housing/housing.tgz&quot;
+
+def fetch_housing_data(housing_url=HOUSING_URL, housing_path=HOUSING_PATH):
+    if not os.path.isdir(housing_path):
+        os.makedirs(housing_path)
+    tgz_path = os.path.join(housing_path, &quot;housing.tgz&quot;)
+    urllib.request.urlretrieve(housing_url, tgz_path)
+    housing_tgz = tarfile.open(tgz_path)
+    housing_tgz.extractall(path=housing_path)
+    housing_tgz.close()
+
+fetch_housing_data()</code></pre>
+<p>然后使用pandas来读入数据，返回一个pandas的DataFrame 对象：</p>
+<pre class="python"><code>HOUSING_PATH = os.path.join(&quot;../test/datasets&quot;, &quot;housing&quot;)
+
+import pandas as pd
+
+def load_housing_data(housing_path=HOUSING_PATH):
+    csv_path = os.path.join(housing_path, &quot;housing.csv&quot;)
+    return pd.read_csv(csv_path)
+
+housing = load_housing_data()</code></pre>
+<p>可以看一下数据的结构： <img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210123161251034.png" /></p>
+<p>也可以使用<code>info</code> 方法来查看数据的描述,可以展示数据的行数，每列的类型以及非空值的数量</p>
+<pre class="python"><code>housing.info()
+&gt;&gt; &lt;class &#39;pandas.core.frame.DataFrame&#39;&gt;
+&gt;&gt; RangeIndex: 20640 entries, 0 to 20639
+&gt;&gt; Data columns (total 10 columns):
+&gt;&gt;  #   Column              Non-Null Count  Dtype  
+&gt;&gt; ---  ------              --------------  -----  
+&gt;&gt;  0   longitude           20640 non-null  float64
+&gt;&gt;  1   latitude            20640 non-null  float64
+&gt;&gt;  2   housing_median_age  20640 non-null  float64
+&gt;&gt;  3   total_rooms         20640 non-null  float64
+&gt;&gt;  4   total_bedrooms      20433 non-null  float64
+&gt;&gt;  5   population          20640 non-null  float64
+&gt;&gt;  6   households          20640 non-null  float64
+&gt;&gt;  7   median_income       20640 non-null  float64
+&gt;&gt;  8   median_house_value  20640 non-null  float64
+&gt;&gt;  9   ocean_proximity     20640 non-null  object 
+&gt;&gt; dtypes: float64(9), object(1)
+&gt;&gt; memory usage: 1.6+ MB</code></pre>
+<p>注意到<code>total_bedrooms</code> 变量只有20433个非空值，因此后续可能要对该变量进行缺失值的处理</p>
+<p>对于<code>ocean_proximity</code>这个变量，可以使用<code>value_counts()</code> 方法来看其具体的分类情况：</p>
+<pre class="python"><code>housing[&quot;ocean_proximity&quot;].value_counts()
+&gt;&gt; &lt;1H OCEAN     9136
+&gt;&gt; INLAND        6551
+&gt;&gt; NEAR OCEAN    2658
+&gt;&gt; NEAR BAY      2290
+&gt;&gt; ISLAND           5
+&gt;&gt; Name: ocean_proximity, dtype: int64</code></pre>
+<p>使用<code>describe</code> 方法可以得到数据的汇总统计信息：</p>
+<pre class="python"><code>housing.describe()</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>longitude</th>
+      <th>latitude</th>
+      <th>housing_median_age</th>
+      <th>total_rooms</th>
+      <th>total_bedrooms</th>
+      <th>population</th>
+      <th>households</th>
+      <th>median_income</th>
+      <th>median_house_value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>20640.000000</td>
+      <td>20640.000000</td>
+      <td>20640.000000</td>
+      <td>20640.000000</td>
+      <td>20433.000000</td>
+      <td>20640.000000</td>
+      <td>20640.000000</td>
+      <td>20640.000000</td>
+      <td>20640.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>-119.569704</td>
+      <td>35.631861</td>
+      <td>28.639486</td>
+      <td>2635.763081</td>
+      <td>537.870553</td>
+      <td>1425.476744</td>
+      <td>499.539680</td>
+      <td>3.870671</td>
+      <td>206855.816909</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>2.003532</td>
+      <td>2.135952</td>
+      <td>12.585558</td>
+      <td>2181.615252</td>
+      <td>421.385070</td>
+      <td>1132.462122</td>
+      <td>382.329753</td>
+      <td>1.899822</td>
+      <td>115395.615874</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>-124.350000</td>
+      <td>32.540000</td>
+      <td>1.000000</td>
+      <td>2.000000</td>
+      <td>1.000000</td>
+      <td>3.000000</td>
+      <td>1.000000</td>
+      <td>0.499900</td>
+      <td>14999.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>-121.800000</td>
+      <td>33.930000</td>
+      <td>18.000000</td>
+      <td>1447.750000</td>
+      <td>296.000000</td>
+      <td>787.000000</td>
+      <td>280.000000</td>
+      <td>2.563400</td>
+      <td>119600.000000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>-118.490000</td>
+      <td>34.260000</td>
+      <td>29.000000</td>
+      <td>2127.000000</td>
+      <td>435.000000</td>
+      <td>1166.000000</td>
+      <td>409.000000</td>
+      <td>3.534800</td>
+      <td>179700.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>-118.010000</td>
+      <td>37.710000</td>
+      <td>37.000000</td>
+      <td>3148.000000</td>
+      <td>647.000000</td>
+      <td>1725.000000</td>
+      <td>605.000000</td>
+      <td>4.743250</td>
+      <td>264725.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>-114.310000</td>
+      <td>41.950000</td>
+      <td>52.000000</td>
+      <td>39320.000000</td>
+      <td>6445.000000</td>
+      <td>35682.000000</td>
+      <td>6082.000000</td>
+      <td>15.000100</td>
+      <td>500001.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p>除了得到一些数值信息之外，对数据的探索更直接的方式是通过可视化来得到数据的一些特征,最简单的就是画直方图来反映数据的分布</p>
+<pre class="python"><code>import matplotlib.pyplot as plt
+housing.hist(bins=50, figsize=(20,15))
+&gt;&gt; array([[&lt;AxesSubplot:title={&#39;center&#39;:&#39;longitude&#39;}&gt;,
+&gt;&gt;         &lt;AxesSubplot:title={&#39;center&#39;:&#39;latitude&#39;}&gt;,
+&gt;&gt;         &lt;AxesSubplot:title={&#39;center&#39;:&#39;housing_median_age&#39;}&gt;],
+&gt;&gt;        [&lt;AxesSubplot:title={&#39;center&#39;:&#39;total_rooms&#39;}&gt;,
+&gt;&gt;         &lt;AxesSubplot:title={&#39;center&#39;:&#39;total_bedrooms&#39;}&gt;,
+&gt;&gt;         &lt;AxesSubplot:title={&#39;center&#39;:&#39;population&#39;}&gt;],
+&gt;&gt;        [&lt;AxesSubplot:title={&#39;center&#39;:&#39;households&#39;}&gt;,
+&gt;&gt;         &lt;AxesSubplot:title={&#39;center&#39;:&#39;median_income&#39;}&gt;,
+&gt;&gt;         &lt;AxesSubplot:title={&#39;center&#39;:&#39;median_house_value&#39;}&gt;]],
+&gt;&gt;       dtype=object)
+plt.show()</code></pre>
+<p><img src="/post/2021-01-23-hands-on-ml-ch2/index.zh-cn_files/figure-html/unnamed-chunk-1-1.png" width="1920" /></p>
+<p>观察数据的分布可以得到一些可能注意不到的信息：比如这里的<code>median income</code> 变量，看横坐标范围是0.5-15，所以不可能是以美元作为单位，这个时候我们就要尽量弄清楚这些已经经过处理的数值是怎么得到的(这里经过了转化，单位变成了$10000，并且下限是0.5，上限是15);另外我们看到这些<em>变量的尺度差异比较大</em>，后续需要进行缩放处理(scaling); 还有就是这些变量看起来都是偏向分布的(tailed distribution),这对于某些机器学习算法的学习可能比较困难，所以后续可能要进行转化，使其分布趋向于钟形分布</p>
+<div id="创建测试集" class="section level3">
+<h3>创建测试集</h3>
+<p>为什么要在选择模型之前就要创建测试集呢？</p>
+<p>因为人的大脑是一种惊人的模式检测系统，可能我们在观察了测试数据之后可能会偶然发现有意思的模式从而就会有偏向性的选择某个模型，在测试集上估计误差的时候就会过于乐观(data snooping bias)</p>
+<p>因此我们需要提前将测试集划分好，并且在模型训练过程中不触及测试集</p>
+<p>在划分训练集和测试集的时候主要有两种方法：</p>
+<ul>
+<li><p>完全随机抽样</p></li>
+<li><p>分层抽样</p></li>
+</ul>
+<p>Scikit-Learn 提供了一些函数来划分训练集和测试集</p>
+<pre class="python"><code>###完全随机抽样
+from sklearn.model_selection import train_test_split
+
+##random_states是随机种子数
+train_set, test_set = train_test_split(housing, test_size=0.2,random_state=42)</code></pre>
+<p>假设这个项目中中位数收入(median income)对预测median housing prices是比较重要的变量，因此我们在创建测试集的时候希望能够代表不同类别的收入群体；由于median income是一个连续性的变量，所以我们需要将其转化成分类变量：</p>
+<pre class="python"><code>import numpy as np
+housing[&quot;income_cat&quot;] = pd.cut(housing[&quot;median_income&quot;],
+                               bins=[0., 1.5, 3.0, 4.5, 6., np.inf],
+                               labels=[1, 2, 3, 4, 5])
+                               
+housing[&quot;income_cat&quot;].value_counts()
+&gt;&gt; 3    7236
+&gt;&gt; 2    6581
+&gt;&gt; 4    3639
+&gt;&gt; 5    2362
+&gt;&gt; 1     822
+&gt;&gt; Name: income_cat, dtype: int64
+housing[&quot;income_cat&quot;].hist()</code></pre>
+<p><img src="/post/2021-01-23-hands-on-ml-ch2/index.zh-cn_files/figure-html/unnamed-chunk-1-3.png" width="1920" /></p>
+<p>然后可以使用Scikit-Learn的<strong>StratifiedShuffleSplit类</strong>来进行分层抽样：</p>
+<pre class="python"><code>from sklearn.model_selection import StratifiedShuffleSplit
+
+split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+for train_index, test_index in split.split(housing, housing[&quot;income_cat&quot;]):
+    strat_train_set = housing.loc[train_index]
+    strat_test_set = housing.loc[test_index]</code></pre>
+</div>
+</div>

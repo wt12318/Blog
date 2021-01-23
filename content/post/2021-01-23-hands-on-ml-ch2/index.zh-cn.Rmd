@@ -1,0 +1,176 @@
+---
+title: 【Ch2】Hands on Machine Learnig
+author: wutao
+date: '2021-01-23'
+slug: hands_on_ml_ch2
+categories:
+  - reading notes
+tags:
+  - ML
+image : "image1.png"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE,comment=">>",
+                      engine.path = list(python = 'C:\\Users\\16504\\AppData\\Local\\Programs\\Python\\Python38\\python.exe'))
+```
+
+本章展示了一个实例项目的完整流程，主要步骤包括：
+
+-   组织项目(look at the big picture)
+
+-   获取数据
+
+-   对数据进行探索和可视化
+
+-   对数据进行预处理
+
+-   选择模型进行训练
+
+-   微调模型
+
+-   展示结果
+
+-   启动，监控并维护系统
+
+本章使用的数据为加州房屋价格数据集，来自1990年的人口普查数据,包括每个地区(人口普查单位)的中位数收入，人口，中位数住房价格等信息，需要建立一个模型来预测住房价格
+
+## Look at the Big Picture
+
+第一步就是**确定问题** ：
+
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210123145823410.png)
+
+这个项目是处于一个数据管线(pipeline)上的一环，目的是预测出地区的住房价格以供后续的投资决策参考
+
+有关机器学习系统的问题包括：这个系统是监督的还是非监督的还是增强学习类型；是分类任务还是回归任务还是其他；需要使用批量学习还是在线学习
+
+这个任务是典型的监督学习，回归任务(单变量回归)；由于没有连续的数据流进入系统，所以采用批量学习(batch learning)
+
+第二步是选择一个**性能衡量指标**，对于回归问题最常用的是RMSE(Root Mean Square Error,均方根误差):
+
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210123152509580.png)
+
+也可以使用其他的函数，比如，如果数据中离群点比较多，可以使用MAE(mean absolute error,平均绝对误差)，这个衡量相较RMSE对离群点更不敏感
+
+第三步是 **再次检查假设** 帮助我们较早的发现可能的问题，比如如果系统的下游需要的不是数值而是价格的分类(低中高)，那么这个问题就变成分类问题而不是回归问题了；所以需要在项目开始前将这些问题考虑到，避免时间精力的浪费
+
+## Get the Data
+
+编写函数来自动下载数据并解压：
+
+```{python}
+import os
+import tarfile
+import urllib
+import urllib.request
+
+DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml2/master/"
+HOUSING_PATH = os.path.join("../test/datasets", "housing")
+HOUSING_URL = DOWNLOAD_ROOT + "datasets/housing/housing.tgz"
+
+def fetch_housing_data(housing_url=HOUSING_URL, housing_path=HOUSING_PATH):
+    if not os.path.isdir(housing_path):
+        os.makedirs(housing_path)
+    tgz_path = os.path.join(housing_path, "housing.tgz")
+    urllib.request.urlretrieve(housing_url, tgz_path)
+    housing_tgz = tarfile.open(tgz_path)
+    housing_tgz.extractall(path=housing_path)
+    housing_tgz.close()
+
+fetch_housing_data()
+```
+
+然后使用pandas来读入数据，返回一个pandas的DataFrame 对象：
+
+```{python}
+HOUSING_PATH = os.path.join("../test/datasets", "housing")
+
+import pandas as pd
+
+def load_housing_data(housing_path=HOUSING_PATH):
+    csv_path = os.path.join(housing_path, "housing.csv")
+    return pd.read_csv(csv_path)
+
+housing = load_housing_data()
+```
+
+可以看一下数据的结构： ![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210123161251034.png)
+
+也可以使用`info` 方法来查看数据的描述,可以展示数据的行数，每列的类型以及非空值的数量
+
+```{python}
+housing.info()
+```
+
+注意到`total_bedrooms` 变量只有20433个非空值，因此后续可能要对该变量进行缺失值的处理
+
+对于`ocean_proximity`这个变量，可以使用`value_counts()` 方法来看其具体的分类情况：
+
+```{python}
+housing["ocean_proximity"].value_counts()
+```
+
+使用`describe` 方法可以得到数据的汇总统计信息：
+
+```{python}
+housing.describe()
+```
+
+除了得到一些数值信息之外，对数据的探索更直接的方式是通过可视化来得到数据的一些特征,最简单的就是画直方图来反映数据的分布
+
+```{python}
+import matplotlib.pyplot as plt
+housing.hist(bins=50, figsize=(20,15))
+plt.show()
+```
+
+观察数据的分布可以得到一些可能注意不到的信息：比如这里的`median income` 变量，看横坐标范围是0.5-15，所以不可能是以美元作为单位，这个时候我们就要尽量弄清楚这些已经经过处理的数值是怎么得到的(这里经过了转化，单位变成了\$10000，并且下限是0.5，上限是15);另外我们看到这些*变量的尺度差异比较大*，后续需要进行缩放处理(scaling); 还有就是这些变量看起来都是偏向分布的(tailed distribution),这对于某些机器学习算法的学习可能比较困难，所以后续可能要进行转化，使其分布趋向于钟形分布
+
+### 创建测试集
+
+为什么要在选择模型之前就要创建测试集呢？
+
+因为人的大脑是一种惊人的模式检测系统，可能我们在观察了测试数据之后可能会偶然发现有意思的模式从而就会有偏向性的选择某个模型，在测试集上估计误差的时候就会过于乐观(data snooping bias)
+
+因此我们需要提前将测试集划分好，并且在模型训练过程中不触及测试集
+
+在划分训练集和测试集的时候主要有两种方法：
+
+-   完全随机抽样
+
+-   分层抽样
+
+Scikit-Learn 提供了一些函数来划分训练集和测试集
+
+```{python}
+###完全随机抽样
+from sklearn.model_selection import train_test_split
+
+##random_states是随机种子数
+train_set, test_set = train_test_split(housing, test_size=0.2,random_state=42)
+
+```
+
+假设这个项目中中位数收入(median income)对预测median housing prices是比较重要的变量，因此我们在创建测试集的时候希望能够代表不同类别的收入群体；由于median income是一个连续性的变量，所以我们需要将其转化成分类变量：
+
+```{python}
+import numpy as np
+housing["income_cat"] = pd.cut(housing["median_income"],
+                               bins=[0., 1.5, 3.0, 4.5, 6., np.inf],
+                               labels=[1, 2, 3, 4, 5])
+                               
+housing["income_cat"].value_counts()
+housing["income_cat"].hist()
+```
+
+然后可以使用Scikit-Learn的**StratifiedShuffleSplit类**来进行分层抽样：
+
+```{python}
+from sklearn.model_selection import StratifiedShuffleSplit
+
+split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+for train_index, test_index in split.split(housing, housing["income_cat"]):
+    strat_train_set = housing.loc[train_index]
+    strat_test_set = housing.loc[test_index]
+```
