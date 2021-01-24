@@ -61,6 +61,10 @@ knitr::opts_chunk$set(collapse = TRUE,comment=">>",
 
 ```{python}
 import os
+
+```
+
+```{python eval=FALSE, include=FALSE}
 import tarfile
 import urllib
 import urllib.request
@@ -174,3 +178,231 @@ for train_index, test_index in split.split(housing, housing["income_cat"]):
     strat_train_set = housing.loc[train_index]
     strat_test_set = housing.loc[test_index]
 ```
+
+最后需要将我们创建的用于分层抽样的变量`income_cat` 删除：
+
+```{python}
+for set_ in (strat_train_set,strat_test_set):
+  set_.drop("income_cat",axis=1,inplace=True)
+```
+
+## 对数据进行探索和可视化
+
+首先我们要确保对数据的探索和可视化只对训练集进行，另外如果数据集比较大，这一步骤也可以选择一部分数据集作为"exploration set"
+
+对数据的可视化要选取合适的形式，比如这个项目是不同地区的房价，因此可以以经纬度来展示不同的变量(住房价格，人口密度等)；有些时候可视化需要调整一些参数使得模式更加清晰(比如点的透明度)
+
+有时候可以将一些变量进行合并
+
+对数据的探索是一个迭代的过程，当我们建立起一个原型系统之后，在运行的过程中可以分析其输出然后返回来再次进行这个探索步骤，从而获得更深的理解
+
+## 数据预处理
+
+将数据(预)处理的过程包装成函数是非常有用的：
+
+-   在任何数据集上都可以便捷地重复数据转化步骤
+
+-   可以将经常用到的函数打包成库，以便未来的项目进行复用
+
+-   如果我们的项目是部署在动态的系统上，就可以使用这些函数对新输入的数据进行转化
+
+-   更重要的是：通过函数，我们可以尝试不同的转化参数或不同的转化步骤的组合对最终模型性能的影响
+
+首先获取训练集的拷贝并将数据的labels去掉：
+
+```{python}
+housing = strat_train_set.drop("median_house_value", axis=1) # drop labels for training set
+housing_labels = strat_train_set["median_house_value"].copy()
+```
+
+### 数据清洗
+
+大部分机器学习算法是不能够处理缺失值的，而我们之前看到`total_bedrooms` 变量是有一些缺失值的，
+
+```{python}
+sample_incomplete_rows = housing[housing.isnull().any(axis=1)].head()
+sample_incomplete_rows
+```
+
+对于缺失值的处理可以有3种选择：
+
+-   将相应的地区删除(删除观测值，也就是行)
+
+-   将有缺失值的变量删除(删除列)
+
+-   将缺失值填补为某个值(比如0,平均值,中位数等)
+
+需要注意的是：如果采取用某个值填补缺失值，需要将这个值存储下来，不只是训练集，之后还要用这个值来填充测试集中的缺失值，新的数据中的缺失值
+
+使用pandas DataFrame中的`dropna()` `drop` 和`fillna()`方法可以实现：
+
+```{python}
+# option 1 
+housing.dropna(subset=["total_bedrooms"]) 
+
+```
+
+```{python}
+# option 2 
+housing.drop("total_bedrooms", axis=1) 
+```
+
+```{python}
+# option 3
+median = housing["total_bedrooms"].median() 
+
+housing["total_bedrooms"].fillna(median, inplace=True)
+```
+
+Scikit-Learn提供了一个方便的类`SimpleImputer` 来处理缺失值：
+
+```{python collapse = TRUE}
+###首先需要创建一个SimpleImputer实例
+from sklearn.impute import SimpleImputer
+
+imputer = SimpleImputer(strategy="median")
+
+###由于只能对数值变量计算meidan，所以将字符变量删除
+housing_num = housing.drop("ocean_proximity",axis=1)
+
+###使用fit方法计算median
+imputer.fit(housing_num)
+
+##计算的结果存储在statistics_实例变量中
+imputer.statistics_
+##比较一下
+housing_num.median().values
+
+####现在就相当于在训练集上"trained" 这个imputer，再使用他去对数据集进行transform(填充缺失值)
+X = imputer.transform(housing_num)
+X
+
+###将Numpy array转化成数据框
+housing_tr = pd.DataFrame(X, columns=housing_num.columns, index=housing_num.index)
+```
+
+### 处理分类变量
+
+这个例子中只有一个变量是分类变量`ocean_proximity` ,
+
+```{python}
+housing_cat = housing[["ocean_proximity"]]
+housing_cat.head(10)
+```
+
+对于分类变量一般有两种处理方法：
+
+-   用多个数值去编码不同的类别
+
+-   使用dummy变量，也就是one-hot编码(该类别为1，其他类别为0)
+
+使用Scikit-Learn的OrdinalEncoder类和OneHotEncoder类可以分别处理上述两种情况：
+
+```{python collapse = TRUE}
+from sklearn.preprocessing import OrdinalEncoder
+
+###fit_transform相当于上面的先fit再transform
+ordinal_encoder = OrdinalEncoder()
+housing_cat_encoded = ordinal_encoder.fit_transform(housing_cat)
+housing_cat_encoded[:10]
+
+###结果存储在categories_变量中
+ordinal_encoder.categories_
+```
+
+```{python collapse = TRUE}
+from sklearn.preprocessing import OneHotEncoder
+
+cat_encoder = OneHotEncoder()
+housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
+housing_cat_1hot
+
+cat_encoder.categories_
+
+###为了便于储存，结果是稀疏矩阵，可以转化为正常的矩阵形式
+housing_cat_1hot.toarray()
+###也可以使用参数OneHotEncoder(sparse=False)
+```
+
+需要注意的点是：在机器学习算法中通常会认为差值较小的值比差值较大的值更相似，如果使用不同的数值来编码分类变量(第一种方法)，需要注意其含义(在这里0和4比0和1更相似)
+
+### **Custom Transformers**
+
+我们也可以定义自己的转化器，需要做的就是：创建一个类，并实现3个方法(fit, transfrom,fit_transform),可以通过添加Scikit Learn的`TransformerMixin`类作为一个基础类来自动添加最后一个类(fit_ftansform),除此之外，还可以添加`BaseEstimator`作为基础类，从而可以获得两个额外的方法(get_params() 和set_params())，来更方便的**进行超参数的调试**，下面是一个合并变量的例子：
+
+```{python}
+from sklearn.base import BaseEstimator, TransformerMixin
+
+# column index
+rooms_ix, bedrooms_ix, population_ix, households_ix = 3, 4, 5, 6
+
+class CombinedAttributesAdder(BaseEstimator, TransformerMixin):
+    def __init__(self, add_bedrooms_per_room=True): # no *args or **kargs
+        self.add_bedrooms_per_room = add_bedrooms_per_room
+    def fit(self, X, y=None):
+        return self  # nothing else to do
+    def transform(self, X):
+        rooms_per_household = X[:, rooms_ix] / X[:, households_ix]
+        population_per_household = X[:, population_ix] / X[:, households_ix]
+        if self.add_bedrooms_per_room:
+            bedrooms_per_room = X[:, bedrooms_ix] / X[:, rooms_ix]
+            return np.c_[X, rooms_per_household, population_per_household,
+                         bedrooms_per_room]
+        else:
+            return np.c_[X, rooms_per_household, population_per_household]
+
+attr_adder = CombinedAttributesAdder(add_bedrooms_per_room=False)
+housing_extra_attribs = attr_adder.transform(housing.values)
+
+```
+
+### 特征缩放
+
+当输入数据的范围(scale)相差较大，机器学习算法一般不会表现很好
+
+一般有两种方法可以使所有的变量的尺度一致：
+
+-   min-max 缩放(也叫normalization) 将数据缩放到0-1的范围(也可以选择其他的范围)，计算方法是：减去最小值然后除以最大值与最小值的差值；Scikit-learn 提供了`MinMaxScaler` 转化器(feature_range超参数来修改范围)
+
+-   Standardization 减去均值然后除以标准差，这种方法并不会将数值绑定到某个范围并且受离群值影响比较小；Scikit-learn提供了`StandardScaler` 转化器
+
+### **Transformation Pipelines**
+
+Scikit-Learn提供了`Pipeline`类可以用来组合一系列的数据转化过程，下面是将之前对数值变量的处理组合成pipeline：
+
+```{python}
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+num_pipeline = Pipeline([
+        ('imputer', SimpleImputer(strategy="median")),
+        ('attribs_adder', CombinedAttributesAdder()),
+        ('std_scaler', StandardScaler()),
+    ])
+
+housing_num_tr = num_pipeline.fit_transform(housing_num)
+
+```
+
+`Pipeline` 的输入是一个列表，每个元素都是name/estimator对，最后一个estimator必须是转化器(也就是说最后一个必须有fit_transform方法)
+
+为了可以**同时处理数值变量和分类变量**，我们可以使用Scikit-Learn的**ColumnTransformer**(0.20版本)：
+
+```{python}
+from sklearn.compose import ColumnTransformer
+
+num_attribs = list(housing_num)
+cat_attribs = ["ocean_proximity"]
+
+full_pipeline = ColumnTransformer([
+        ("num", num_pipeline, num_attribs),
+        ("cat", OneHotEncoder(), cat_attribs),
+    ])
+
+housing_prepared = full_pipeline.fit_transform(housing)
+
+```
+
+ColumnTransformer的输入是一个列表，列表的元素是元组，元组包含：名称+转化器+需要转化的列名
+
+## 选择并训练模型
