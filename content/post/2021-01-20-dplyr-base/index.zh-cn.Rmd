@@ -15,7 +15,7 @@ image : "dplyr.png"
 knitr::opts_chunk$set(collapse = TRUE,comment=">>")
 ```
 
-参考：[dplyr base](https://github.com/tidyverse/dplyr/blob/master/vignettes/base.Rmd)
+参考： [dplyr base](https://github.com/tidyverse/dplyr/blob/master/vignettes/base.Rmd) [two table](https://github.com/tidyverse/dplyr/blob/master/vignettes/two-table.Rmd)
 
 这篇文章主要比较dplyr函数和base R的区别
 
@@ -28,6 +28,8 @@ knitr::opts_chunk$set(collapse = TRUE,comment=">>")
 5.  所有的dplyr动词都可以处理分组数据并且和处理整个数据框类似，但是在baseR中可能每个组的处理都有着不同的形式
 
 ## One table verbs
+
+![Close document tab](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAWElEQVR42mNgGPTAxsZmJsVqQApgmGw1yApwKcQiT7phRBuCzzCSDSHGMKINIeDNmWQlA2IigKJwIssQkHdINgxfmBBtGDEBS3KCxBc7pMQgMYE5c/AXPwAwSX4lV3pTWwAAAABJRU5ErkJggg==)
 
 | dplyr                         | base                                             |
 |-------------------------------|--------------------------------------------------|
@@ -392,3 +394,13 @@ two-table verbs指的是合并两个数据框的操作，在dplyr中使用\*\_jo
 | `full_join(df1, df2)`  | `merge(df1, df2, all = TRUE)`            |
 | `semi_join(df1, df2)`  | `df1[df1$x %in% df2$x, , drop = FALSE]`  |
 | `anti_join(df1, df2)`  | `df1[!df1$x %in% df2$x, , drop = FALSE]` |
+
+在dplyr中有3类动词可以同时对两个table进行操作：
+
+-   Mutating join 根据匹配的行来添加变量
+
+-   Filtering joins 根据匹配的行来筛选变量
+
+-   Set operations 将数据集的行作为集合的元素来操作
+
+### Mutating joins
