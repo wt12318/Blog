@@ -733,11 +733,46 @@ findOverlaps(gr, grl)
 &gt;&gt;   [4]         5           2
 &gt;&gt;   [5]         6           2
 &gt;&gt;   -------
+&gt;&gt;   queryLength: 10 / subjectLength: 2
+
+###queryHits 是query中的index，subjectHits表示在subject哪一个元素与query相应的元素overlap
+
+seqnames(grl[[&quot;txB&quot;]][2])[1] &lt;- &quot;chr2&quot;
+grl
+&gt;&gt; GRangesList object of length 2:
+&gt;&gt; $txA
+&gt;&gt; GRanges object with 1 range and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr2   103-106      + |         5      0.45
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+&gt;&gt; 
+&gt;&gt; $txB
+&gt;&gt; GRanges object with 2 ranges and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr1   107-109      + |         3       0.3
+&gt;&gt;   [2]     chr2   113-115      - |         4       0.5
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+
+findOverlaps(gr, grl)
+&gt;&gt; Hits object with 6 hits and 0 metadata columns:
+&gt;&gt;       queryHits subjectHits
+&gt;&gt;       &lt;integer&gt;   &lt;integer&gt;
+&gt;&gt;   [1]         2           1
+&gt;&gt;   [2]         3           1
+&gt;&gt;   [3]         4           1
+&gt;&gt;   [4]         4           2
+&gt;&gt;   [5]         5           2
+&gt;&gt;   [6]         6           2
+&gt;&gt;   -------
 &gt;&gt;   queryLength: 10 / subjectLength: 2</code></pre>
 <p><code>countOverlaps</code> 计算在query中匹配到subject的元素个数</p>
 <pre class="r"><code>countOverlaps(gr, grl)
 &gt;&gt; a b c d e f g h i j 
-&gt;&gt; 0 1 1 1 1 1 0 0 0 0</code></pre>
+&gt;&gt; 0 1 1 2 1 1 0 0 0 0</code></pre>
 <p><code>subsetByOverlaps</code> 在query中提取至少与subject重复一次的元素：</p>
 <pre class="r"><code>subsetByOverlaps(gr,grl)
 &gt;&gt; GRanges object with 5 ranges and 2 metadata columns:

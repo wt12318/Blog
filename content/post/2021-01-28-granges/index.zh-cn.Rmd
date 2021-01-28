@@ -307,6 +307,13 @@ gr
 grl
 
 findOverlaps(gr, grl)
+
+###queryHits 是query中的index，subjectHits表示在subject哪一个元素与query相应的元素overlap
+
+seqnames(grl[["txB"]][2])[1] <- "chr2"
+grl
+
+findOverlaps(gr, grl)
 ```
 
 `countOverlaps` 计算在query中匹配到subject的元素个数
