@@ -29,8 +29,6 @@ knitr::opts_chunk$set(collapse = TRUE,comment=">>")
 
 ## One table verbs
 
-![Close document tab](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAWElEQVR42mNgGPTAxsZmJsVqQApgmGw1yApwKcQiT7phRBuCzzCSDSHGMKINIeDNmWQlA2IigKJwIssQkHdINgxfmBBtGDEBS3KCxBc7pMQgMYE5c/AXPwAwSX4lV3pTWwAAAABJRU5ErkJggg==)
-
 | dplyr                         | base                                             |
 |-------------------------------|--------------------------------------------------|
 | `arrange(df, x)`              | `df[order(x), , drop = FALSE]`                   |

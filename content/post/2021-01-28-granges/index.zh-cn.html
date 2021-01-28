@@ -1,0 +1,753 @@
+---
+title: GenomicRanges
+author: wutao
+date: '2021-01-28'
+slug: granges
+categories:
+  - R
+tags:
+  - bioinformatics
+  - Bioconductor package
+image : "bioconductor_logo_rgb.jpg"
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p><code>GenomicRanges</code> 是Bioconductor里面用来展示基因组位置、处理基因组区间的一个基础性的包</p>
+<p>这个包主要通过引进3个类来进行对基因组的操作:</p>
+<ul>
+<li><p><em>GRanges:</em> 基因组区间</p></li>
+<li><p><em>GPos</em>：基因组位置</p></li>
+<li><p><em>GRangesList</em>：一组基因组区间</p></li>
+</ul>
+<pre class="r"><code>library(GenomicRanges)
+&gt;&gt; Warning: 程辑包&#39;S4Vectors&#39;是用R版本3.6.3 来建造的
+&gt;&gt; Warning: 程辑包&#39;IRanges&#39;是用R版本3.6.2 来建造的
+&gt;&gt; Warning: 程辑包&#39;GenomeInfoDb&#39;是用R版本3.6.3 来建造的</code></pre>
+<div id="granges" class="section level2">
+<h2>GRanges</h2>
+<p><em>GRanges</em> 类储存的是一系列基因组区间，每个区间都有一个起始位点和终止位点，可用来 存储基因组特征的位置(比如转录本，外显子等)；可以通过<code>GRanges</code> 函数来创建：</p>
+<pre class="r"><code>gr &lt;- GRanges(
+    seqnames = Rle(c(&quot;chr1&quot;, &quot;chr2&quot;, &quot;chr1&quot;, &quot;chr3&quot;), c(1, 3, 2, 4)),
+    ranges = IRanges(start = 101:110, end = 111:120, names = head(letters, 10)),
+    strand = Rle(strand(c(&quot;-&quot;, &quot;+&quot;, &quot;*&quot;, &quot;+&quot;, &quot;-&quot;)), c(1, 2, 2, 3, 2)),
+    score = 1:10,
+    GC = seq(1, 0, length=10))
+gr
+&gt;&gt; GRanges object with 10 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   101-111      - |         1                 1
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   103-113      + |         3 0.777777777777778
+&gt;&gt;   d     chr2   104-114      * |         4 0.666666666666667
+&gt;&gt;   e     chr1   105-115      * |         5 0.555555555555556
+&gt;&gt;   f     chr1   106-116      + |         6 0.444444444444444
+&gt;&gt;   g     chr3   107-117      + |         7 0.333333333333333
+&gt;&gt;   h     chr3   108-118      + |         8 0.222222222222222
+&gt;&gt;   i     chr3   109-119      - |         9 0.111111111111111
+&gt;&gt;   j     chr3   110-120      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</code></pre>
+<p><code>Rle</code>函数是<code>IRanges</code> 包提供的用来存储序列信息的函数(序列信息中有很多的重复内容)：</p>
+<pre class="r"><code>test1 &lt;- Rle(c(&quot;chr1&quot;, &quot;chr2&quot;, &quot;chr1&quot;), c(1000, 3000, 2000))
+test2 &lt;- c(rep(&quot;chr1&quot;,1000),rep(&quot;chr2&quot;,3000),rep(&quot;chr1&quot;,2000))
+
+##比较
+identical(as.vector(test1), test2)
+&gt;&gt; [1] TRUE
+
+object.size(test1)
+&gt;&gt; 1320 bytes
+object.size(test2)
+&gt;&gt; 48160 bytes</code></pre>
+<p>创建的这个<em>GRanges</em> 对象有10个基因组区间，可以看到<code>|</code>符号将数据分成左右两个部分；左边的是基因组坐标(包括seqnames, ranges, 和strand)，右边是元数据(metadata),也就是一些注释信息</p>
+<p>对于基因组位置，我们可以通过<code>seqnames()</code>,<code>ranges()</code> ,<code>strand()</code>函数来提取：</p>
+<pre class="r"><code>seqnames(gr)
+&gt;&gt; factor-Rle of length 10 with 4 runs
+&gt;&gt;   Lengths:    1    3    2    4
+&gt;&gt;   Values : chr1 chr2 chr1 chr3
+&gt;&gt; Levels(3): chr1 chr2 chr3
+
+ranges(gr)
+&gt;&gt; IRanges object with 10 ranges and 0 metadata columns:
+&gt;&gt;         start       end     width
+&gt;&gt;     &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;
+&gt;&gt;   a       101       111        11
+&gt;&gt;   b       102       112        11
+&gt;&gt;   c       103       113        11
+&gt;&gt;   d       104       114        11
+&gt;&gt;   e       105       115        11
+&gt;&gt;   f       106       116        11
+&gt;&gt;   g       107       117        11
+&gt;&gt;   h       108       118        11
+&gt;&gt;   i       109       119        11
+&gt;&gt;   j       110       120        11
+
+strand(gr)
+&gt;&gt; factor-Rle of length 10 with 5 runs
+&gt;&gt;   Lengths: 1 2 2 3 2
+&gt;&gt;   Values : - + * + -
+&gt;&gt; Levels(3): + - *</code></pre>
+<p>也可以整体地提取左边和右边的内容：</p>
+<pre class="r"><code>##提取左边的基因组位置信息
+granges(gr)
+&gt;&gt; GRanges object with 10 ranges and 0 metadata columns:
+&gt;&gt;     seqnames    ranges strand
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;   a     chr1   101-111      -
+&gt;&gt;   b     chr2   102-112      +
+&gt;&gt;   c     chr2   103-113      +
+&gt;&gt;   d     chr2   104-114      *
+&gt;&gt;   e     chr1   105-115      *
+&gt;&gt;   f     chr1   106-116      +
+&gt;&gt;   g     chr3   107-117      +
+&gt;&gt;   h     chr3   108-118      +
+&gt;&gt;   i     chr3   109-119      -
+&gt;&gt;   j     chr3   110-120      -
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+##提取右边的元数据信息
+mcols(gr)
+&gt;&gt; DataFrame with 10 rows and 2 columns
+&gt;&gt;       score                GC
+&gt;&gt;   &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt; a         1                 1
+&gt;&gt; b         2 0.888888888888889
+&gt;&gt; c         3 0.777777777777778
+&gt;&gt; d         4 0.666666666666667
+&gt;&gt; e         5 0.555555555555556
+&gt;&gt; f         6 0.444444444444444
+&gt;&gt; g         7 0.333333333333333
+&gt;&gt; h         8 0.222222222222222
+&gt;&gt; i         9 0.111111111111111
+&gt;&gt; j        10                 0
+mcols(gr)$score
+&gt;&gt;  [1]  1  2  3  4  5  6  7  8  9 10</code></pre>
+<div id="拆分和并granges对象" class="section level3">
+<h3>拆分,和并GRanges对象</h3>
+<p>GRanges对象可以通过<code>split</code>函数进行拆分，拆分后产生的是GRangesList对象：</p>
+<pre class="r"><code>sp &lt;- split(gr,rep(1:2,each=5))
+sp
+&gt;&gt; GRangesList object of length 2:
+&gt;&gt; $`1`
+&gt;&gt; GRanges object with 5 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   101-111      - |         1                 1
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   103-113      + |         3 0.777777777777778
+&gt;&gt;   d     chr2   104-114      * |         4 0.666666666666667
+&gt;&gt;   e     chr1   105-115      * |         5 0.555555555555556
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+&gt;&gt; 
+&gt;&gt; $`2`
+&gt;&gt; GRanges object with 5 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   f     chr1   106-116      + |         6 0.444444444444444
+&gt;&gt;   g     chr3   107-117      + |         7 0.333333333333333
+&gt;&gt;   h     chr3   108-118      + |         8 0.222222222222222
+&gt;&gt;   i     chr3   109-119      - |         9 0.111111111111111
+&gt;&gt;   j     chr3   110-120      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</code></pre>
+<p>合并GRanges对象可以使用<code>c</code>和<code>append</code>函数：</p>
+<pre class="r"><code>c(sp[[1]],sp[[2]])
+&gt;&gt; GRanges object with 10 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   101-111      - |         1                 1
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   103-113      + |         3 0.777777777777778
+&gt;&gt;   d     chr2   104-114      * |         4 0.666666666666667
+&gt;&gt;   e     chr1   105-115      * |         5 0.555555555555556
+&gt;&gt;   f     chr1   106-116      + |         6 0.444444444444444
+&gt;&gt;   g     chr3   107-117      + |         7 0.333333333333333
+&gt;&gt;   h     chr3   108-118      + |         8 0.222222222222222
+&gt;&gt;   i     chr3   109-119      - |         9 0.111111111111111
+&gt;&gt;   j     chr3   110-120      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+##or
+append(sp[[1]],sp[[2]])
+&gt;&gt; GRanges object with 10 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   101-111      - |         1                 1
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   103-113      + |         3 0.777777777777778
+&gt;&gt;   d     chr2   104-114      * |         4 0.666666666666667
+&gt;&gt;   e     chr1   105-115      * |         5 0.555555555555556
+&gt;&gt;   f     chr1   106-116      + |         6 0.444444444444444
+&gt;&gt;   g     chr3   107-117      + |         7 0.333333333333333
+&gt;&gt;   h     chr3   108-118      + |         8 0.222222222222222
+&gt;&gt;   i     chr3   109-119      - |         9 0.111111111111111
+&gt;&gt;   j     chr3   110-120      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</code></pre>
+</div>
+<div id="对granges对象取子集" class="section level3">
+<h3>对GRanges对象取子集</h3>
+<p>可以通过<code>[</code>操作符来选取子集：</p>
+<pre class="r"><code>gr[2:3]
+&gt;&gt; GRanges object with 2 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   103-113      + |         3 0.777777777777778
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</code></pre>
+<p>指定第二个参数来选取特定的<strong>metadata信息：</strong></p>
+<pre class="r"><code>gr[2:3,&quot;GC&quot;]
+&gt;&gt; GRanges object with 2 ranges and 1 metadata column:
+&gt;&gt;     seqnames    ranges strand |                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; |         &lt;numeric&gt;
+&gt;&gt;   b     chr2   102-112      + | 0.888888888888889
+&gt;&gt;   c     chr2   103-113      + | 0.777777777777778
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</code></pre>
+<p>也可以通过这种取子集的方式对GRanges对象进行修改：</p>
+<pre class="r"><code>singles &lt;- split(gr, names(gr))##拆分
+grMod &lt;- gr
+grMod[2] &lt;- singles[[1]]##将第二行替换成第一行
+head(grMod, n=3)
+&gt;&gt; GRanges object with 3 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   101-111      - |         1                 1
+&gt;&gt;   b     chr1   101-111      - |         1                 1
+&gt;&gt;   c     chr2   103-113      + |         3 0.777777777777778
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</code></pre>
+</div>
+<div id="区间操作" class="section level3">
+<h3>区间操作</h3>
+<p>GRanges对象的基本区间特征可以使用<code>start</code> <code>end</code> <code>width</code> <code>range</code> 函数来获得：</p>
+<pre class="r"><code>g &lt;- gr[1:3]
+g &lt;- append(g, singles[[10]])
+g
+&gt;&gt; GRanges object with 4 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   101-111      - |         1                 1
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   103-113      + |         3 0.777777777777778
+&gt;&gt;   j     chr3   110-120      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+###起始
+start(g)
+&gt;&gt; [1] 101 102 103 110
+
+##终止
+end(g)
+&gt;&gt; [1] 111 112 113 120
+
+###区间长度
+width(g)
+&gt;&gt; [1] 11 11 11 11
+
+###range
+range(g)
+&gt;&gt; GRanges object with 3 ranges and 0 metadata columns:
+&gt;&gt;       seqnames    ranges strand
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;   [1]     chr1   101-111      -
+&gt;&gt;   [2]     chr2   102-113      +
+&gt;&gt;   [3]     chr3   110-120      -
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</code></pre>
+<p>GRanges用来操作区间的函数可以分为3类：</p>
+<ul>
+<li><p><em>intra-range methods</em></p></li>
+<li><p><em>inter-range methods</em></p></li>
+<li><p><em>between-range methods</em></p></li>
+</ul>
+<p>intra-range对每个区间进行操作：</p>
+<pre class="r"><code>###flank取区间的上游或下游
+##每个区间的上游10bp
+flank(g,10)
+&gt;&gt; GRanges object with 4 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   112-121      - |         1                 1
+&gt;&gt;   b     chr2    92-101      + |         2 0.888888888888889
+&gt;&gt;   c     chr2    93-102      + |         3 0.777777777777778
+&gt;&gt;   j     chr3   121-130      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+##每个区间的下游10bp
+flank(g,10,start = FALSE)
+&gt;&gt; GRanges object with 4 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1    91-100      - |         1                 1
+&gt;&gt;   b     chr2   113-122      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   114-123      + |         3 0.777777777777778
+&gt;&gt;   j     chr3   100-109      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+###shift移动区间
+shift(g,5)
+&gt;&gt; GRanges object with 4 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   106-116      - |         1                 1
+&gt;&gt;   b     chr2   107-117      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   108-118      + |         3 0.777777777777778
+&gt;&gt;   j     chr3   115-125      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+shift(g,-5)
+&gt;&gt; GRanges object with 4 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1    96-106      - |         1                 1
+&gt;&gt;   b     chr2    97-107      + |         2 0.888888888888889
+&gt;&gt;   c     chr2    98-108      + |         3 0.777777777777778
+&gt;&gt;   j     chr3   105-115      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+###resize拓展区间
+resize(g,30)
+&gt;&gt; GRanges object with 4 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1    82-111      - |         1                 1
+&gt;&gt;   b     chr2   102-131      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   103-132      + |         3 0.777777777777778
+&gt;&gt;   j     chr3    91-120      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+resize(g,30,fix = &quot;end&quot;)
+&gt;&gt; GRanges object with 4 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   101-130      - |         1                 1
+&gt;&gt;   b     chr2    83-112      + |         2 0.888888888888889
+&gt;&gt;   c     chr2    84-113      + |         3 0.777777777777778
+&gt;&gt;   j     chr3   110-139      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</code></pre>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210128155320852.png" /></p>
+<p>inter-range 涉及在单个GRanges对象中的区间比较：</p>
+<pre class="r"><code>###reduce 合并重复的区间
+reduce(g)
+&gt;&gt; GRanges object with 3 ranges and 0 metadata columns:
+&gt;&gt;       seqnames    ranges strand
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;   [1]     chr1   101-111      -
+&gt;&gt;   [2]     chr2   102-113      +
+&gt;&gt;   [3]     chr3   110-120      -
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+###gap 获取区间的间隔
+gaps(g)
+&gt;&gt; GRanges object with 3 ranges and 0 metadata columns:
+&gt;&gt;       seqnames    ranges strand
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;   [1]     chr1     1-100      -
+&gt;&gt;   [2]     chr2     1-101      +
+&gt;&gt;   [3]     chr3     1-109      -
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+##由于没有提供染色体的长度，所以从1开始到指定的区间end结束
+##提供染色体长度
+seqlengths(g) &lt;- c(249250621, 243199373, 198022430)
+seqlengths(g)
+&gt;&gt;      chr1      chr2      chr3 
+&gt;&gt; 249250621 243199373 198022430
+
+gaps(g)
+&gt;&gt; GRanges object with 12 ranges and 0 metadata columns:
+&gt;&gt;        seqnames        ranges strand
+&gt;&gt;           &lt;Rle&gt;     &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;    [1]     chr1   1-249250621      +
+&gt;&gt;    [2]     chr1         1-100      -
+&gt;&gt;    [3]     chr1 112-249250621      -
+&gt;&gt;    [4]     chr1   1-249250621      *
+&gt;&gt;    [5]     chr2         1-101      +
+&gt;&gt;    ...      ...           ...    ...
+&gt;&gt;    [8]     chr2   1-243199373      *
+&gt;&gt;    [9]     chr3   1-198022430      +
+&gt;&gt;   [10]     chr3         1-109      -
+&gt;&gt;   [11]     chr3 121-198022430      -
+&gt;&gt;   [12]     chr3   1-198022430      *
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome
+
+###disjoin 重组GRanges对象得到互不重叠的区间
+disjoin(g)
+&gt;&gt; GRanges object with 5 ranges and 0 metadata columns:
+&gt;&gt;       seqnames    ranges strand
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;   [1]     chr1   101-111      -
+&gt;&gt;   [2]     chr2       102      +
+&gt;&gt;   [3]     chr2   103-112      +
+&gt;&gt;   [4]     chr2       113      +
+&gt;&gt;   [5]     chr3   110-120      -
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome
+
+###coverage 计算重叠的程度
+coverage(g)
+&gt;&gt; RleList of length 3
+&gt;&gt; $chr1
+&gt;&gt; integer-Rle of length 249250621 with 3 runs
+&gt;&gt;   Lengths:       100        11 249250510
+&gt;&gt;   Values :         0         1         0
+&gt;&gt; 
+&gt;&gt; $chr2
+&gt;&gt; integer-Rle of length 243199373 with 5 runs
+&gt;&gt;   Lengths:       101         1        10         1 243199260
+&gt;&gt;   Values :         0         1         2         1         0
+&gt;&gt; 
+&gt;&gt; $chr3
+&gt;&gt; integer-Rle of length 198022430 with 3 runs
+&gt;&gt;   Lengths:       109        11 198022310
+&gt;&gt;   Values :         0         1         0</code></pre>
+<p>Between-range 计算不同的GRanges对象之间的关系：</p>
+<pre class="r"><code>###union 将GRanges视为位置的集合,取并集
+g2 &lt;- head(gr,n=2)
+g
+&gt;&gt; GRanges object with 4 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   101-111      - |         1                 1
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   103-113      + |         3 0.777777777777778
+&gt;&gt;   j     chr3   110-120      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome
+g2
+&gt;&gt; GRanges object with 2 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   101-111      - |         1                 1
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+union(g,g2)
+&gt;&gt; GRanges object with 3 ranges and 0 metadata columns:
+&gt;&gt;       seqnames    ranges strand
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;   [1]     chr1   101-111      -
+&gt;&gt;   [2]     chr2   102-113      +
+&gt;&gt;   [3]     chr3   110-120      -
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome
+
+###intersect 取交集
+intersect(g,g2)
+&gt;&gt; GRanges object with 2 ranges and 0 metadata columns:
+&gt;&gt;       seqnames    ranges strand
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;   [1]     chr1   101-111      -
+&gt;&gt;   [2]     chr2   102-112      +
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome
+
+###setdiff 取差集
+setdiff(g,g2)
+&gt;&gt; GRanges object with 2 ranges and 0 metadata columns:
+&gt;&gt;       seqnames    ranges strand
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;   [1]     chr2       113      +
+&gt;&gt;   [2]     chr3   110-120      -
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome</code></pre>
+<p>当两个GRanges是相关联的时候，也就是要对两个对象进行成对操作(如对象1的第一行和对象2的第一行取交集等)，可以使用以<code>p</code>开头(parallel)的一系列操作：</p>
+<pre class="r"><code>g3 &lt;- g[1:2]
+ranges(g3[1]) &lt;- IRanges(start=105, end=112)
+g3
+&gt;&gt; GRanges object with 2 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   105-112      - |         1                 1
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome
+punion(g2, g3)
+&gt;&gt; GRanges object with 2 ranges and 0 metadata columns:
+&gt;&gt;     seqnames    ranges strand
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;   a     chr1   101-112      -
+&gt;&gt;   b     chr2   102-112      +
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome
+
+pintersect(g2, g3)
+&gt;&gt; GRanges object with 2 ranges and 3 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC       hit
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt; &lt;logical&gt;
+&gt;&gt;   a     chr1   105-111      - |         1                 1      TRUE
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889      TRUE
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome
+
+psetdiff(g2, g3)
+&gt;&gt; GRanges object with 2 ranges and 0 metadata columns:
+&gt;&gt;     seqnames    ranges strand
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+&gt;&gt;   a     chr1   101-104      -
+&gt;&gt;   b     chr2   102-101      +
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome</code></pre>
+</div>
+</div>
+<div id="grangeslist" class="section level2">
+<h2>GRangesList</h2>
+<p>当一个基因组特征由多个区间构成，那么用一个组合对象GRangesList来表示更有意义：</p>
+<pre class="r"><code>###两个转录本
+gr1 &lt;- GRanges(
+    seqnames = &quot;chr2&quot;,
+    ranges = IRanges(103, 106),
+    strand = &quot;+&quot;,
+    score = 5L, GC = 0.45)
+
+##第二个转录本有两个外显子
+gr2 &lt;- GRanges(
+    seqnames = c(&quot;chr1&quot;, &quot;chr1&quot;),
+    ranges = IRanges(c(107, 113), width = 3),
+    strand = c(&quot;+&quot;, &quot;-&quot;),
+    score = 3:4, GC = c(0.3, 0.5))
+grl &lt;- GRangesList(&quot;txA&quot; = gr1, &quot;txB&quot; = gr2)
+grl
+&gt;&gt; GRangesList object of length 2:
+&gt;&gt; $txA
+&gt;&gt; GRanges object with 1 range and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr2   103-106      + |         5      0.45
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+&gt;&gt; 
+&gt;&gt; $txB
+&gt;&gt; GRanges object with 2 ranges and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr1   107-109      + |         3       0.3
+&gt;&gt;   [2]     chr1   113-115      - |         4       0.5
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths</code></pre>
+<p>在GRanges上的方法在GRangesList上返回的就是list：</p>
+<pre class="r"><code>seqnames(grl)
+&gt;&gt; RleList of length 2
+&gt;&gt; $txA
+&gt;&gt; factor-Rle of length 1 with 1 run
+&gt;&gt;   Lengths:    1
+&gt;&gt;   Values : chr2
+&gt;&gt; Levels(2): chr2 chr1
+&gt;&gt; 
+&gt;&gt; $txB
+&gt;&gt; factor-Rle of length 2 with 1 run
+&gt;&gt;   Lengths:    2
+&gt;&gt;   Values : chr1
+&gt;&gt; Levels(2): chr2 chr1
+strand(grl)
+&gt;&gt; RleList of length 2
+&gt;&gt; $txA
+&gt;&gt; factor-Rle of length 1 with 1 run
+&gt;&gt;   Lengths: 1
+&gt;&gt;   Values : +
+&gt;&gt; Levels(3): + - *
+&gt;&gt; 
+&gt;&gt; $txB
+&gt;&gt; factor-Rle of length 2 with 2 runs
+&gt;&gt;   Lengths: 1 1
+&gt;&gt;   Values : + -
+&gt;&gt; Levels(3): + - *</code></pre>
+<p>需要注意的是不同于GRanges的<code>mcols</code> 方法，在GRangesList上返回的是列表层面的信息：</p>
+<pre class="r"><code>mcols(grl)
+&gt;&gt; DataFrame with 2 rows and 0 columns
+
+###需要unlist来combine GRangesList中的GRanges
+mcols(unlist(grl))
+&gt;&gt; DataFrame with 3 rows and 2 columns
+&gt;&gt;         score        GC
+&gt;&gt;     &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt; txA         5      0.45
+&gt;&gt; txB         3       0.3
+&gt;&gt; txB         4       0.5</code></pre>
+<p>在GRangesList上的区间操作和单独的GRanges类似：</p>
+<pre class="r"><code>start(grl)
+&gt;&gt; IntegerList of length 2
+&gt;&gt; [[&quot;txA&quot;]] 103
+&gt;&gt; [[&quot;txB&quot;]] 107 113
+
+end(grl)
+&gt;&gt; IntegerList of length 2
+&gt;&gt; [[&quot;txA&quot;]] 106
+&gt;&gt; [[&quot;txB&quot;]] 109 115
+
+width(grl)
+&gt;&gt; IntegerList of length 2
+&gt;&gt; [[&quot;txA&quot;]] 4
+&gt;&gt; [[&quot;txB&quot;]] 3 3
+
+##这些操作返回的是整数列表
+class(width(grl))
+&gt;&gt; [1] &quot;CompressedIntegerList&quot;
+&gt;&gt; attr(,&quot;package&quot;)
+&gt;&gt; [1] &quot;IRanges&quot;
+sum(width(grl))
+&gt;&gt; txA txB 
+&gt;&gt;   4   6
+
+###intra-, inter- and between-range对每个GRanges对象操作
+shift(grl, 20)
+&gt;&gt; GRangesList object of length 2:
+&gt;&gt; $txA
+&gt;&gt; GRanges object with 1 range and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr2   123-126      + |         5      0.45
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+&gt;&gt; 
+&gt;&gt; $txB
+&gt;&gt; GRanges object with 2 ranges and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr1   127-129      + |         3       0.3
+&gt;&gt;   [2]     chr1   133-135      - |         4       0.5
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+
+coverage(grl)
+&gt;&gt; RleList of length 2
+&gt;&gt; $chr2
+&gt;&gt; integer-Rle of length 106 with 2 runs
+&gt;&gt;   Lengths: 102   4
+&gt;&gt;   Values :   0   1
+&gt;&gt; 
+&gt;&gt; $chr1
+&gt;&gt; integer-Rle of length 115 with 4 runs
+&gt;&gt;   Lengths: 106   3   3   3
+&gt;&gt;   Values :   0   1   0   1</code></pre>
+<p>GRangesList的行为和list类似，也可以通过<code>[</code>,<code>[[</code>或者<code>$</code>来取子集：<code>[</code> 返回的是GRangesList对象，<code>[[</code>和<code>$</code>返回的是GRanges对象</p>
+<pre class="r"><code>grl[1]
+&gt;&gt; GRangesList object of length 1:
+&gt;&gt; $txA
+&gt;&gt; GRanges object with 1 range and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr2   103-106      + |         5      0.45
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+grl[[1]]
+&gt;&gt; GRanges object with 1 range and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr2   103-106      + |         5      0.45
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+grl[&quot;txA&quot;]
+&gt;&gt; GRangesList object of length 1:
+&gt;&gt; $txA
+&gt;&gt; GRanges object with 1 range and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr2   103-106      + |         5      0.45
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+grl$txB
+&gt;&gt; GRanges object with 2 ranges and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr1   107-109      + |         3       0.3
+&gt;&gt;   [2]     chr1   113-115      - |         4       0.5
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+
+class(grl[1])
+&gt;&gt; [1] &quot;CompressedGRangesList&quot;
+&gt;&gt; attr(,&quot;package&quot;)
+&gt;&gt; [1] &quot;GenomicRanges&quot;
+class(grl[[1]])
+&gt;&gt; [1] &quot;GRanges&quot;
+&gt;&gt; attr(,&quot;package&quot;)
+&gt;&gt; [1] &quot;GenomicRanges&quot;</code></pre>
+</div>
+<div id="区间重叠" class="section level2">
+<h2>区间重叠</h2>
+<p>区间重叠的操作也属于上面提到的<em>between-range methods (</em>比较两个对象的区间),主要有3个函数：<code>findOverlaps</code>,<code>countOverlaps</code>和<code>subsetByOverlaps</code></p>
+<p><code>findOverlaps</code>输入是query(查找对象)和subject(目标对象)，返回的是一个Hit对象</p>
+<pre class="r"><code>gr
+&gt;&gt; GRanges object with 10 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   a     chr1   101-111      - |         1                 1
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   103-113      + |         3 0.777777777777778
+&gt;&gt;   d     chr2   104-114      * |         4 0.666666666666667
+&gt;&gt;   e     chr1   105-115      * |         5 0.555555555555556
+&gt;&gt;   f     chr1   106-116      + |         6 0.444444444444444
+&gt;&gt;   g     chr3   107-117      + |         7 0.333333333333333
+&gt;&gt;   h     chr3   108-118      + |         8 0.222222222222222
+&gt;&gt;   i     chr3   109-119      - |         9 0.111111111111111
+&gt;&gt;   j     chr3   110-120      - |        10                 0
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths
+
+grl
+&gt;&gt; GRangesList object of length 2:
+&gt;&gt; $txA
+&gt;&gt; GRanges object with 1 range and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr2   103-106      + |         5      0.45
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+&gt;&gt; 
+&gt;&gt; $txB
+&gt;&gt; GRanges object with 2 ranges and 2 metadata columns:
+&gt;&gt;       seqnames    ranges strand |     score        GC
+&gt;&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;numeric&gt;
+&gt;&gt;   [1]     chr1   107-109      + |         3       0.3
+&gt;&gt;   [2]     chr1   113-115      - |         4       0.5
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 2 sequences from an unspecified genome; no seqlengths
+
+findOverlaps(gr, grl)
+&gt;&gt; Hits object with 5 hits and 0 metadata columns:
+&gt;&gt;       queryHits subjectHits
+&gt;&gt;       &lt;integer&gt;   &lt;integer&gt;
+&gt;&gt;   [1]         2           1
+&gt;&gt;   [2]         3           1
+&gt;&gt;   [3]         4           1
+&gt;&gt;   [4]         5           2
+&gt;&gt;   [5]         6           2
+&gt;&gt;   -------
+&gt;&gt;   queryLength: 10 / subjectLength: 2</code></pre>
+<p><code>countOverlaps</code> 计算在query中匹配到subject的元素个数</p>
+<pre class="r"><code>countOverlaps(gr, grl)
+&gt;&gt; a b c d e f g h i j 
+&gt;&gt; 0 1 1 1 1 1 0 0 0 0</code></pre>
+<p><code>subsetByOverlaps</code> 在query中提取至少与subject重复一次的元素：</p>
+<pre class="r"><code>subsetByOverlaps(gr,grl)
+&gt;&gt; GRanges object with 5 ranges and 2 metadata columns:
+&gt;&gt;     seqnames    ranges strand |     score                GC
+&gt;&gt;        &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;         &lt;numeric&gt;
+&gt;&gt;   b     chr2   102-112      + |         2 0.888888888888889
+&gt;&gt;   c     chr2   103-113      + |         3 0.777777777777778
+&gt;&gt;   d     chr2   104-114      * |         4 0.666666666666667
+&gt;&gt;   e     chr1   105-115      * |         5 0.555555555555556
+&gt;&gt;   f     chr1   106-116      + |         6 0.444444444444444
+&gt;&gt;   -------
+&gt;&gt;   seqinfo: 3 sequences from an unspecified genome; no seqlengths</code></pre>
+</div>

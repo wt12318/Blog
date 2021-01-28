@@ -213,15 +213,15 @@ df %&gt;% distinct(x)
 &gt;&gt; # A tibble: 10 x 1
 &gt;&gt;        x
 &gt;&gt;    &lt;int&gt;
-&gt;&gt;  1     9
-&gt;&gt;  2     1
-&gt;&gt;  3     3
-&gt;&gt;  4     6
-&gt;&gt;  5     4
-&gt;&gt;  6     5
-&gt;&gt;  7     8
-&gt;&gt;  8    10
-&gt;&gt;  9     2
+&gt;&gt;  1     5
+&gt;&gt;  2     4
+&gt;&gt;  3     8
+&gt;&gt;  4     9
+&gt;&gt;  5    10
+&gt;&gt;  6     6
+&gt;&gt;  7     3
+&gt;&gt;  8     2
+&gt;&gt;  9     1
 &gt;&gt; 10     7
 
 ###使用.keep_all保留其他的列
@@ -229,46 +229,46 @@ df %&gt;% distinct(x,.keep_all = TRUE)
 &gt;&gt; # A tibble: 10 x 2
 &gt;&gt;        x     y
 &gt;&gt;    &lt;int&gt; &lt;int&gt;
-&gt;&gt;  1     9     2
-&gt;&gt;  2     1     9
-&gt;&gt;  3     3     8
-&gt;&gt;  4     6    10
-&gt;&gt;  5     4     1
-&gt;&gt;  6     5     8
-&gt;&gt;  7     8     4
-&gt;&gt;  8    10     2
-&gt;&gt;  9     2     1
-&gt;&gt; 10     7    10</code></pre>
+&gt;&gt;  1     5     1
+&gt;&gt;  2     4     4
+&gt;&gt;  3     8     9
+&gt;&gt;  4     9     1
+&gt;&gt;  5    10     9
+&gt;&gt;  6     6     2
+&gt;&gt;  7     3     1
+&gt;&gt;  8     2     3
+&gt;&gt;  9     1     4
+&gt;&gt; 10     7     8</code></pre>
 <p>在base R中基于想要选择的列还是全部的数据框也有两种实现方法：</p>
 <pre class="r"><code>unique(df[&quot;x&quot;])
 &gt;&gt; # A tibble: 10 x 1
 &gt;&gt;        x
 &gt;&gt;    &lt;int&gt;
-&gt;&gt;  1     9
-&gt;&gt;  2     1
-&gt;&gt;  3     3
-&gt;&gt;  4     6
-&gt;&gt;  5     4
-&gt;&gt;  6     5
-&gt;&gt;  7     8
-&gt;&gt;  8    10
-&gt;&gt;  9     2
+&gt;&gt;  1     5
+&gt;&gt;  2     4
+&gt;&gt;  3     8
+&gt;&gt;  4     9
+&gt;&gt;  5    10
+&gt;&gt;  6     6
+&gt;&gt;  7     3
+&gt;&gt;  8     2
+&gt;&gt;  9     1
 &gt;&gt; 10     7
 
 df[!duplicated(df$x), , drop = FALSE]
 &gt;&gt; # A tibble: 10 x 2
 &gt;&gt;        x     y
 &gt;&gt;    &lt;int&gt; &lt;int&gt;
-&gt;&gt;  1     9     2
-&gt;&gt;  2     1     9
-&gt;&gt;  3     3     8
-&gt;&gt;  4     6    10
-&gt;&gt;  5     4     1
-&gt;&gt;  6     5     8
-&gt;&gt;  7     8     4
-&gt;&gt;  8    10     2
-&gt;&gt;  9     2     1
-&gt;&gt; 10     7    10</code></pre>
+&gt;&gt;  1     5     1
+&gt;&gt;  2     4     4
+&gt;&gt;  3     8     9
+&gt;&gt;  4     9     1
+&gt;&gt;  5    10     9
+&gt;&gt;  6     6     2
+&gt;&gt;  7     3     1
+&gt;&gt;  8     2     3
+&gt;&gt;  9     1     4
+&gt;&gt; 10     7     8</code></pre>
 </div>
 <div id="filter返回符合条件的行" class="section level3">
 <h3><code>filter()</code>返回符合条件的行</h3>
@@ -372,29 +372,29 @@ starwars %&gt;% filter(hair_color == &quot;none&quot; &amp; eye_color == &quot;b
 &gt;&gt; # A tibble: 100 x 4
 &gt;&gt;        x     y     z    z2
 &gt;&gt;    &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;dbl&gt;
-&gt;&gt;  1     9     2    11   121
-&gt;&gt;  2     1     9    10   100
-&gt;&gt;  3     3     8    11   121
-&gt;&gt;  4     3     5     8    64
-&gt;&gt;  5     1     4     5    25
-&gt;&gt;  6     6    10    16   256
-&gt;&gt;  7     1     8     9    81
-&gt;&gt;  8     4     1     5    25
-&gt;&gt;  9     5     8    13   169
-&gt;&gt; 10     8     4    12   144
+&gt;&gt;  1     5     1     6    36
+&gt;&gt;  2     4     4     8    64
+&gt;&gt;  3     8     9    17   289
+&gt;&gt;  4     9     1    10   100
+&gt;&gt;  5    10     9    19   361
+&gt;&gt;  6     8     7    15   225
+&gt;&gt;  7     5     9    14   196
+&gt;&gt;  8     6     2     8    64
+&gt;&gt;  9     3     1     4    16
+&gt;&gt; 10     2     3     5    25
 &gt;&gt; # ... with 90 more rows</code></pre>
 <p>在base R里面相似的有transform函数，但是要注意的是transform函数不能使用刚创建的变量，只能使用已有的变量：</p>
 <pre class="r"><code>head(transform(df,z=x+y,z2=z^2))
 &gt;&gt; Error in eval(substitute(list(...)), `_data`, parent.frame()): 找不到对象&#39;z&#39;
 
 head(transform(df,z=x+y,z2=(x+y)^2))
-&gt;&gt;   x  y  z  z2
-&gt;&gt; 1 9  2 11 121
-&gt;&gt; 2 1  9 10 100
-&gt;&gt; 3 3  8 11 121
-&gt;&gt; 4 3  5  8  64
-&gt;&gt; 5 1  4  5  25
-&gt;&gt; 6 6 10 16 256</code></pre>
+&gt;&gt;    x y  z  z2
+&gt;&gt; 1  5 1  6  36
+&gt;&gt; 2  4 4  8  64
+&gt;&gt; 3  8 9 17 289
+&gt;&gt; 4  9 1 10 100
+&gt;&gt; 5 10 9 19 361
+&gt;&gt; 6  8 7 15 225</code></pre>
 <p>也可以使用<code>$&lt;-</code>来创建新的变量：</p>
 <pre class="r"><code>mtcars$cy12 &lt;- mtcars$cyl * 2
 mtcars$cy14 &lt;- mtcars$cy12 *2</code></pre>
