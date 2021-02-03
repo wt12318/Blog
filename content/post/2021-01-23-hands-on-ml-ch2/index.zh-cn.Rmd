@@ -64,7 +64,7 @@ import os
 
 ```
 
-```{python eval=FALSE, include=FALSE}
+```{python eval=FALSE, include=TRUE}
 import tarfile
 import urllib
 import urllib.request
@@ -119,6 +119,10 @@ housing["ocean_proximity"].value_counts()
 
 ```{python}
 housing.describe()
+```
+
+```{python}
+housing.describe()["median_house_value"]
 ```
 
 除了得到一些数值信息之外，对数据的探索更直接的方式是通过可视化来得到数据的一些特征,最简单的就是画直方图来反映数据的分布
@@ -270,11 +274,10 @@ imputer.fit(housing_num)
 
 ##计算的结果存储在statistics_实例变量中
 imputer.statistics_
-##比较一下
 housing_num.median().values
 
-####现在就相当于在训练集上"trained" 这个imputer，再使用他去对数据集进行transform(填充缺失值)
-X = imputer.transform(housing_num)
+
+X = imputer.transform(housing_num)####现在就相当于在训练集上"trained" 这个imputer，再使用他去对数据集进行transform(填充缺失值)
 X
 
 ###将Numpy array转化成数据框
@@ -406,3 +409,203 @@ housing_prepared = full_pipeline.fit_transform(housing)
 ColumnTransformer的输入是一个列表，列表的元素是元组，元组包含：名称+转化器+需要转化的列名
 
 ## 选择并训练模型
+
+### 在测试集上训练并评估模型
+
+首先尝试线性回归模型并在训练集上计算误差(RMSE):
+
+```{python}
+from sklearn.linear_model import LinearRegression
+
+###构建线性回归模型
+lin_reg = LinearRegression()
+lin_reg.fit(housing_prepared, housing_labels)
+
+###计算RMSE
+from sklearn.metrics import mean_squared_error
+
+housing_predictions = lin_reg.predict(housing_prepared)
+lin_mse = mean_squared_error(housing_labels, housing_predictions)
+lin_rmse = np.sqrt(lin_mse)
+lin_rmse
+
+```
+
+需要预测的变量`median_housing_values`的范围在\$14999\~\$500001之间，所以这个误差有点大，也就是**underfitting**,上一章讲到解决欠拟合可以从3个方面考虑：选择一个更复杂的模型；选择更好的变量；减少模型的约束(现在这个线性回归没有正则化，所以不用考虑这一点)，这里首先尝试一个更复杂的模型：决策树回归，模型的使用类似：
+
+```{python}
+from sklearn.tree import DecisionTreeRegressor
+
+tree_reg = DecisionTreeRegressor() 
+tree_reg.fit(housing_prepared,housing_labels)
+
+housing_predictions = tree_reg.predict(housing_prepared)
+tree_mse = mean_squared_error(housing_labels, housing_predictions)
+tree_rmse = np.sqrt(tree_mse)
+tree_rmse
+```
+
+现在这个模型的误差是0！很大可能是过拟合了，但是要注意：**我们不能够在测试集上测试我们的模型看看是不是过拟合，然后再来调整**，所以这里我们需要应用上章讲到的**将训练集再划分成训练集和验证集**，在训练集中训练模型，在验证集中检测模型然后再进行模型的调整，得到一个较好的结果后再去测试集上检测
+
+### 使用交叉验证来更好的评估模型
+
+交叉验证指的是：随机将训练集分成几份(一般是10份)，每一份称为fold；然后进行训练和评估10次，每次选择一个不同的fold进行评估，在剩余9份中进行训练：
+```{python}
+from sklearn.model_selection import cross_val_score 
+scores = cross_val_score(tree_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10) 
+tree_rmse_scores = np.sqrt(-scores)
+```
+注意：在Scikit-Learn中得到的score是功效函数(越大越好)而不是损失函数，所以是负数
+
+得到的结果是评估分数的数组：
+```{python}
+def display_scores(scores):
+  print("Scores:",scores)
+  print("Mean:",scores.mean())
+  print("SD:",scores.std())
+  
+display_scores(tree_rmse_scores)
+```
+
+可以看到这个决策树模型在验证集上的误差比线性回归模型还要差;另外使用交叉验证除了可以估计模型的性能之外还可以衡量这个估计的精确度(标准差)
+
+我们再算一下线性回归模型的交叉验证结果：
+```{python}
+lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels,
+scoring="neg_mean_squared_error", cv=10)
+
+lin_rmse_scores = np.sqrt(-lin_scores)
+display_scores(lin_rmse_scores)
+```
+
+最后再尝试另一种集成学习模型：随机森林回归(通过随机选特征的子集来训练多个决策树然后对预测进行平均)
+```{python}
+from sklearn.ensemble import RandomForestRegressor
+
+forest_reg = RandomForestRegressor()
+
+##看一下再训练集上的误差
+forest_reg.fit(housing_prepared,housing_labels)
+
+housing_predictions = forest_reg.predict(housing_prepared)
+forest_mse = mean_squared_error(housing_labels, housing_predictions)
+forest_rmse = np.sqrt(forest_mse)
+forest_rmse
+
+
+##交叉验证
+forest_reg_score = cross_val_score(forest_reg,housing_prepared, housing_labels,scoring="neg_mean_squared_error", cv=10)
+
+forest_reg_rmse_scores = np.sqrt(-forest_reg_score)
+display_scores(forest_reg_rmse_scores)
+
+```
+
+随机森林的误差已经要小很多了，但是在训练集上的误差仍然要比在验证集上的误差小很多，说明还是有过拟合的(回顾：可以通过简化模型，加上正则项或者收集更多的数据)
+
+当我们实验了多个模型，应该将每个模型都保存起来，包括模型的超参数，训练参数，交叉验证的值，预测值等以便于模型间的比较，在Python中可以通过`pickle`模块或者`joblib`库来存储scikit-learn模型(jonlib在存储大的Numpy数组上更有效率)：
+```{python eval=FALSE, include=TRUE}
+import joblib
+joblib.dump(my_model,"my_model.pkl)
+
+my_model_loaded = joblib.load("my_model.pkl")
+```
+
+## 微调模型
+调整模型的超参数，有一下几种常用方法
+### 网格搜索
+
+网格搜索就是类似于穷举法，尝试所有的可能；Scikit-learn提供了`GridSearchCV`来进行网格搜索并使用交叉验证来评估所有的超参数的组合：
+```{python}
+from sklearn.model_selection import GridSearchCV
+
+##提供需要实验的超参数值
+param_grid = [ {'n_estimators': [3, 10, 30], 'max_features': [2, 4, 6, 8]}, {'bootstrap': [False], 'n_estimators': [3, 10], 'max_features': [2, 3, 4]},]
+
+forest_reg = RandomForestRegressor()
+grid_search = GridSearchCV(forest_reg, param_grid, cv=5, scoring='neg_mean_squared_error', return_train_score=True)
+
+grid_search.fit(housing_prepared, housing_labels)
+```
+
+param_grid提供需要实验的超参数值，是一个列表，列表的元素是字典，每个字典里面是需要尝试的超参数的值，所以这里面就是：首先评估第一个字典中的`3*4`个超参数的组合，一共12个模型，再评估第二个字典中的`2*3`个超参数的组合，一个6个模型，所以总的需要评估12+6=18个模型，对每个模型训练5次(交叉验证中CV=5)
+
+得到的最好的结果存储在`best_params_`中：
+```{python}
+grid_search.best_params_
+```
+
+整个模型在`best_estimator_`中
+```{python}
+grid_search.best_estimator_
+```
+
+我们也可以得到每个超参数组合的交叉验证的score：
+```{python}
+cvres = grid_search.cv_results_
+
+##平均误差
+for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
+  print(np.sqrt(-mean_score), params)
+```
+
+使用max_feature=8和n_estimators=30得到的误差为49682，比之前要好，说明微调模型是有效果的
+
+注意：一些数据处理的步骤也可以认为是超参数，比如前面的是否添加一些合并的变量(add_bedrooms_per_room)，缺失值的处理，特征选择等；也可以使用类似的方法进行调整
+
+### 随机搜索
+
+当超参数的搜索空间比较大的时候，使用随机搜索的方法比较好
+随机搜索不是尝试所有可能的组合，而是在每次迭代中对每个超参数随机选取一个值，然后对这些随机选取的超参数组合进行评估，这种方法有两个主要的优势：
+
+- 如果我们设置循环数目为1000，那么这种方法对每个超参数都会尝试1000个不同的值(网格法只会尝试给定的值)
+- 通过设定循环的次数就可以控制进行超参数搜寻的成本
+
+### 集成方法
+另一个调整模型的方法就是将表现最好的不同模型结合起来(就像决策树回归模型一样)
+
+### 分析最好的模型和其误差
+我们可以通过对模型的检查来获得对问题的更好的理解，比如我们可以查看在随机森林回归模型中不同变量对模型预测的重要性：
+```{python}
+feature_importances = grid_search.best_estimator_.feature_importances_
+
+feature_importances
+
+extra_attribs = ["rooms_per_hhold", "pop_per_hhold", "bedrooms_per_room"]
+cat_encoder = full_pipeline.named_transformers_["cat"]
+cat_one_hot_attribs = list(cat_encoder.categories_[0])
+attributes = num_attribs + extra_attribs + cat_one_hot_attribs
+sorted(zip(feature_importances, attributes), reverse=True)
+```
+
+通过这个信息，我们就可以将那些不重要的变量丢弃(比如这里的ocean_proximity分类变量中除了INLAND外的其他类别)
+
+### 在测试集上评估模型系统
+在测试集上的计算和前面的流程类似：
+```{python}
+final_model = grid_search.best_estimator_
+
+X_test = strat_test_set.drop("median_house_value", axis=1) 
+y_test = strat_test_set["median_house_value"].copy()
+
+X_test_prepared = full_pipeline.transform(X_test)##注意，仅仅是transform,使用在训练集上已经"train"的参数来transfrom测试集
+final_predictions = final_model.predict(X_test_prepared)
+
+final_mse = mean_squared_error(y_test, final_predictions)
+final_rmse = np.sqrt(final_mse)
+```
+
+有些时候，这样的点估计不太够，我们可以使用`scipy.stats.t.interval()`来计算置信区间：
+```{python}
+from scipy import stats
+confidence = 0.95
+squared_errors = (final_predictions - y_test) ** 2
+
+np.sqrt(stats.t.interval(confidence, len(squared_errors) - 1,loc=squared_errors.mean(),scale=stats.sem(squared_errors)))
+```
+
+最后就是部署模型了：
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210203174058586.png)
+
+
+

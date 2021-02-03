@@ -41,6 +41,24 @@ image : "image1.png"
 <h2>Get the Data</h2>
 <p>编写函数来自动下载数据并解压：</p>
 <pre class="python"><code>import os</code></pre>
+<pre class="python"><code>import tarfile
+import urllib
+import urllib.request
+
+DOWNLOAD_ROOT = &quot;https://raw.githubusercontent.com/ageron/handson-ml2/master/&quot;
+HOUSING_PATH = os.path.join(&quot;../test/datasets&quot;, &quot;housing&quot;)
+HOUSING_URL = DOWNLOAD_ROOT + &quot;datasets/housing/housing.tgz&quot;
+
+def fetch_housing_data(housing_url=HOUSING_URL, housing_path=HOUSING_PATH):
+    if not os.path.isdir(housing_path):
+        os.makedirs(housing_path)
+    tgz_path = os.path.join(housing_path, &quot;housing.tgz&quot;)
+    urllib.request.urlretrieve(housing_url, tgz_path)
+    housing_tgz = tarfile.open(tgz_path)
+    housing_tgz.extractall(path=housing_path)
+    housing_tgz.close()
+
+fetch_housing_data()</code></pre>
 <p>然后使用pandas来读入数据，返回一个pandas的DataFrame 对象：</p>
 <pre class="python"><code>HOUSING_PATH = os.path.join(&quot;../test/datasets&quot;, &quot;housing&quot;)
 
@@ -211,6 +229,16 @@ housing = load_housing_data()</code></pre>
   </tbody>
 </table>
 </div>
+<pre class="python"><code>housing.describe()[&quot;median_house_value&quot;]
+&gt;&gt; count     20640.000000
+&gt;&gt; mean     206855.816909
+&gt;&gt; std      115395.615874
+&gt;&gt; min       14999.000000
+&gt;&gt; 25%      119600.000000
+&gt;&gt; 50%      179700.000000
+&gt;&gt; 75%      264725.000000
+&gt;&gt; max      500001.000000
+&gt;&gt; Name: median_house_value, dtype: float64</code></pre>
 <p>除了得到一些数值信息之外，对数据的探索更直接的方式是通过可视化来得到数据的一些特征,最简单的就是画直方图来反映数据的分布</p>
 <pre class="python"><code>import matplotlib.pyplot as plt
 housing.hist(bins=50, figsize=(20,15))
@@ -738,15 +766,13 @@ imputer.fit(housing_num)
 ##计算的结果存储在statistics_实例变量中
 &gt;&gt; SimpleImputer(strategy=&#39;median&#39;)
 imputer.statistics_
-##比较一下
 &gt;&gt; array([-118.51  ,   34.26  ,   29.    , 2119.5   ,  433.    , 1164.    ,
 &gt;&gt;         408.    ,    3.5409])
 housing_num.median().values
 
-####现在就相当于在训练集上&quot;trained&quot; 这个imputer，再使用他去对数据集进行transform(填充缺失值)
 &gt;&gt; array([-118.51  ,   34.26  ,   29.    , 2119.5   ,  433.    , 1164.    ,
 &gt;&gt;         408.    ,    3.5409])
-X = imputer.transform(housing_num)
+X = imputer.transform(housing_num)####现在就相当于在训练集上&quot;trained&quot; 这个imputer，再使用他去对数据集进行transform(填充缺失值)
 X
 
 ###将Numpy array转化成数据框
@@ -951,4 +977,206 @@ housing_prepared = full_pipeline.fit_transform(housing)</code></pre>
 </div>
 <div id="选择并训练模型" class="section level2">
 <h2>选择并训练模型</h2>
+<div id="在测试集上训练并评估模型" class="section level3">
+<h3>在测试集上训练并评估模型</h3>
+<p>首先尝试线性回归模型并在训练集上计算误差(RMSE):</p>
+<pre class="python"><code>from sklearn.linear_model import LinearRegression
+
+###构建线性回归模型
+lin_reg = LinearRegression()
+lin_reg.fit(housing_prepared, housing_labels)
+
+###计算RMSE
+&gt;&gt; LinearRegression()
+from sklearn.metrics import mean_squared_error
+
+housing_predictions = lin_reg.predict(housing_prepared)
+lin_mse = mean_squared_error(housing_labels, housing_predictions)
+lin_rmse = np.sqrt(lin_mse)
+lin_rmse
+&gt;&gt; 68628.19819848923</code></pre>
+<p>需要预测的变量<code>median_housing_values</code>的范围在$14999~$500001之间，所以这个误差有点大，也就是<strong>underfitting</strong>,上一章讲到解决欠拟合可以从3个方面考虑：选择一个更复杂的模型；选择更好的变量；减少模型的约束(现在这个线性回归没有正则化，所以不用考虑这一点)，这里首先尝试一个更复杂的模型：决策树回归，模型的使用类似：</p>
+<pre class="python"><code>from sklearn.tree import DecisionTreeRegressor
+
+tree_reg = DecisionTreeRegressor() 
+tree_reg.fit(housing_prepared,housing_labels)
+&gt;&gt; DecisionTreeRegressor()
+housing_predictions = tree_reg.predict(housing_prepared)
+tree_mse = mean_squared_error(housing_labels, housing_predictions)
+tree_rmse = np.sqrt(tree_mse)
+tree_rmse
+&gt;&gt; 0.0</code></pre>
+<p>现在这个模型的误差是0！很大可能是过拟合了，但是要注意：<strong>我们不能够在测试集上测试我们的模型看看是不是过拟合，然后再来调整</strong>，所以这里我们需要应用上章讲到的<strong>将训练集再划分成训练集和验证集</strong>，在训练集中训练模型，在验证集中检测模型然后再进行模型的调整，得到一个较好的结果后再去测试集上检测</p>
+</div>
+<div id="使用交叉验证来更好的评估模型" class="section level3">
+<h3>使用交叉验证来更好的评估模型</h3>
+<p>交叉验证指的是：随机将训练集分成几份(一般是10份)，每一份称为fold；然后进行训练和评估10次，每次选择一个不同的fold进行评估，在剩余9份中进行训练：</p>
+<pre class="python"><code>from sklearn.model_selection import cross_val_score 
+scores = cross_val_score(tree_reg, housing_prepared, housing_labels, scoring=&quot;neg_mean_squared_error&quot;, cv=10) 
+tree_rmse_scores = np.sqrt(-scores)</code></pre>
+<p>注意：在Scikit-Learn中得到的score是功效函数(越大越好)而不是损失函数，所以是负数</p>
+<p>得到的结果是评估分数的数组：</p>
+<pre class="python"><code>def display_scores(scores):
+  print(&quot;Scores:&quot;,scores)
+  print(&quot;Mean:&quot;,scores.mean())
+  print(&quot;SD:&quot;,scores.std())
+  
+display_scores(tree_rmse_scores)
+&gt;&gt; Scores: [68286.06060035 66962.00893493 71032.13272104 68837.15338159
+&gt;&gt;  70487.24536294 75725.19431996 70661.79639619 70762.53752476
+&gt;&gt;  75655.49212524 69117.67257064]
+&gt;&gt; Mean: 70752.72939376454
+&gt;&gt; SD: 2751.6588024234325</code></pre>
+<p>可以看到这个决策树模型在验证集上的误差比线性回归模型还要差;另外使用交叉验证除了可以估计模型的性能之外还可以衡量这个估计的精确度(标准差)</p>
+<p>我们再算一下线性回归模型的交叉验证结果：</p>
+<pre class="python"><code>lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels,
+scoring=&quot;neg_mean_squared_error&quot;, cv=10)
+
+lin_rmse_scores = np.sqrt(-lin_scores)
+display_scores(lin_rmse_scores)
+&gt;&gt; Scores: [66782.73843989 66960.118071   70347.95244419 74739.57052552
+&gt;&gt;  68031.13388938 71193.84183426 64969.63056405 68281.61137997
+&gt;&gt;  71552.91566558 67665.10082067]
+&gt;&gt; Mean: 69052.46136345083
+&gt;&gt; SD: 2731.674001798342</code></pre>
+<p>最后再尝试另一种集成学习模型：随机森林回归(通过随机选特征的子集来训练多个决策树然后对预测进行平均)</p>
+<pre class="python"><code>from sklearn.ensemble import RandomForestRegressor
+
+forest_reg = RandomForestRegressor()
+
+##看一下再训练集上的误差
+forest_reg.fit(housing_prepared,housing_labels)
+&gt;&gt; RandomForestRegressor()
+housing_predictions = forest_reg.predict(housing_prepared)
+forest_mse = mean_squared_error(housing_labels, housing_predictions)
+forest_rmse = np.sqrt(forest_mse)
+forest_rmse
+
+
+##交叉验证
+&gt;&gt; 18778.52486921355
+forest_reg_score = cross_val_score(forest_reg,housing_prepared, housing_labels,scoring=&quot;neg_mean_squared_error&quot;, cv=10)
+
+forest_reg_rmse_scores = np.sqrt(-forest_reg_score)
+display_scores(forest_reg_rmse_scores)
+&gt;&gt; Scores: [49568.31834411 47573.50905854 49843.89198683 52188.97657477
+&gt;&gt;  49645.18070489 53713.98966125 49177.37646866 47924.02196311
+&gt;&gt;  53123.79565725 50083.21384355]
+&gt;&gt; Mean: 50284.227426296195
+&gt;&gt; SD: 1968.5877494065933</code></pre>
+<p>随机森林的误差已经要小很多了，但是在训练集上的误差仍然要比在验证集上的误差小很多，说明还是有过拟合的(回顾：可以通过简化模型，加上正则项或者收集更多的数据)</p>
+<p>当我们实验了多个模型，应该将每个模型都保存起来，包括模型的超参数，训练参数，交叉验证的值，预测值等以便于模型间的比较，在Python中可以通过<code>pickle</code>模块或者<code>joblib</code>库来存储scikit-learn模型(jonlib在存储大的Numpy数组上更有效率)：</p>
+<pre class="python"><code>import joblib
+joblib.dump(my_model,&quot;my_model.pkl)
+
+my_model_loaded = joblib.load(&quot;my_model.pkl&quot;)</code></pre>
+</div>
+</div>
+<div id="微调模型" class="section level2">
+<h2>微调模型</h2>
+<p>调整模型的超参数，有一下几种常用方法
+### 网格搜索</p>
+<p>网格搜索就是类似于穷举法，尝试所有的可能；Scikit-learn提供了<code>GridSearchCV</code>来进行网格搜索并使用交叉验证来评估所有的超参数的组合：</p>
+<pre class="python"><code>from sklearn.model_selection import GridSearchCV
+
+##提供需要实验的超参数值
+param_grid = [ {&#39;n_estimators&#39;: [3, 10, 30], &#39;max_features&#39;: [2, 4, 6, 8]}, {&#39;bootstrap&#39;: [False], &#39;n_estimators&#39;: [3, 10], &#39;max_features&#39;: [2, 3, 4]},]
+
+forest_reg = RandomForestRegressor()
+grid_search = GridSearchCV(forest_reg, param_grid, cv=5, scoring=&#39;neg_mean_squared_error&#39;, return_train_score=True)
+
+grid_search.fit(housing_prepared, housing_labels)
+&gt;&gt; GridSearchCV(cv=5, estimator=RandomForestRegressor(),
+&gt;&gt;              param_grid=[{&#39;max_features&#39;: [2, 4, 6, 8],
+&gt;&gt;                           &#39;n_estimators&#39;: [3, 10, 30]},
+&gt;&gt;                          {&#39;bootstrap&#39;: [False], &#39;max_features&#39;: [2, 3, 4],
+&gt;&gt;                           &#39;n_estimators&#39;: [3, 10]}],
+&gt;&gt;              return_train_score=True, scoring=&#39;neg_mean_squared_error&#39;)</code></pre>
+<p>param_grid提供需要实验的超参数值，是一个列表，列表的元素是字典，每个字典里面是需要尝试的超参数的值，所以这里面就是：首先评估第一个字典中的<code>3*4</code>个超参数的组合，一共12个模型，再评估第二个字典中的<code>2*3</code>个超参数的组合，一个6个模型，所以总的需要评估12+6=18个模型，对每个模型训练5次(交叉验证中CV=5)</p>
+<p>得到的最好的结果存储在<code>best_params_</code>中：</p>
+<pre class="python"><code>grid_search.best_params_
+&gt;&gt; {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 30}</code></pre>
+<p>整个模型在<code>best_estimator_</code>中</p>
+<pre class="python"><code>grid_search.best_estimator_
+&gt;&gt; RandomForestRegressor(max_features=8, n_estimators=30)</code></pre>
+<p>我们也可以得到每个超参数组合的交叉验证的score：</p>
+<pre class="python"><code>cvres = grid_search.cv_results_
+
+##平均误差
+for mean_score, params in zip(cvres[&quot;mean_test_score&quot;], cvres[&quot;params&quot;]):
+  print(np.sqrt(-mean_score), params)
+&gt;&gt; 65213.75868027239 {&#39;max_features&#39;: 2, &#39;n_estimators&#39;: 3}
+&gt;&gt; 55731.68677148771 {&#39;max_features&#39;: 2, &#39;n_estimators&#39;: 10}
+&gt;&gt; 52985.54401059915 {&#39;max_features&#39;: 2, &#39;n_estimators&#39;: 30}
+&gt;&gt; 61302.649468816366 {&#39;max_features&#39;: 4, &#39;n_estimators&#39;: 3}
+&gt;&gt; 52966.10861924791 {&#39;max_features&#39;: 4, &#39;n_estimators&#39;: 10}
+&gt;&gt; 50350.65690058004 {&#39;max_features&#39;: 4, &#39;n_estimators&#39;: 30}
+&gt;&gt; 59616.14238079233 {&#39;max_features&#39;: 6, &#39;n_estimators&#39;: 3}
+&gt;&gt; 52136.80466008028 {&#39;max_features&#39;: 6, &#39;n_estimators&#39;: 10}
+&gt;&gt; 49991.6496554798 {&#39;max_features&#39;: 6, &#39;n_estimators&#39;: 30}
+&gt;&gt; 59161.13557248417 {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 3}
+&gt;&gt; 52157.34457878917 {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 10}
+&gt;&gt; 49886.378595634924 {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 30}
+&gt;&gt; 62707.1993667148 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 2, &#39;n_estimators&#39;: 3}
+&gt;&gt; 54367.859604118734 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 2, &#39;n_estimators&#39;: 10}
+&gt;&gt; 60599.57935292836 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 3, &#39;n_estimators&#39;: 3}
+&gt;&gt; 52902.30939223794 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 3, &#39;n_estimators&#39;: 10}
+&gt;&gt; 59088.36401959815 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 4, &#39;n_estimators&#39;: 3}
+&gt;&gt; 51912.57885539316 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 4, &#39;n_estimators&#39;: 10}</code></pre>
+<p>使用max_feature=8和n_estimators=30得到的误差为49682，比之前要好，说明微调模型是有效果的</p>
+<p>注意：一些数据处理的步骤也可以认为是超参数，比如前面的是否添加一些合并的变量(add_bedrooms_per_room)，缺失值的处理，特征选择等；也可以使用类似的方法进行调整</p>
+<div id="随机搜索" class="section level3">
+<h3>随机搜索</h3>
+<p>当超参数的搜索空间比较大的时候，使用随机搜索的方法比较好
+随机搜索不是尝试所有可能的组合，而是在每次迭代中对每个超参数随机选取一个值，然后对这些随机选取的超参数组合进行评估，这种方法有两个主要的优势：</p>
+<ul>
+<li>如果我们设置循环数目为1000，那么这种方法对每个超参数都会尝试1000个不同的值(网格法只会尝试给定的值)</li>
+<li>通过设定循环的次数就可以控制进行超参数搜寻的成本</li>
+</ul>
+</div>
+<div id="集成方法" class="section level3">
+<h3>集成方法</h3>
+<p>另一个调整模型的方法就是将表现最好的不同模型结合起来(就像决策树回归模型一样)</p>
+</div>
+<div id="分析最好的模型和其误差" class="section level3">
+<h3>分析最好的模型和其误差</h3>
+<p>我们可以通过对模型的检查来获得对问题的更好的理解，比如我们可以查看在随机森林回归模型中不同变量对模型预测的重要性：</p>
+<pre class="python"><code>feature_importances = grid_search.best_estimator_.feature_importances_
+
+feature_importances
+&gt;&gt; array([6.71969071e-02, 6.44066969e-02, 4.23734037e-02, 1.54394988e-02,
+&gt;&gt;        1.46224757e-02, 1.44469016e-02, 1.42510035e-02, 3.71297702e-01,
+&gt;&gt;        4.66410393e-02, 1.15727671e-01, 6.76645362e-02, 5.80606240e-03,
+&gt;&gt;        1.54184346e-01, 1.20403201e-04, 2.12515653e-03, 3.69619568e-03])
+extra_attribs = [&quot;rooms_per_hhold&quot;, &quot;pop_per_hhold&quot;, &quot;bedrooms_per_room&quot;]
+cat_encoder = full_pipeline.named_transformers_[&quot;cat&quot;]
+cat_one_hot_attribs = list(cat_encoder.categories_[0])
+attributes = num_attribs + extra_attribs + cat_one_hot_attribs
+sorted(zip(feature_importances, attributes), reverse=True)
+&gt;&gt; [(0.3712977022475445, &#39;median_income&#39;), (0.15418434615348134, &#39;INLAND&#39;), (0.11572767096237938, &#39;pop_per_hhold&#39;), (0.06766453623900677, &#39;bedrooms_per_room&#39;), (0.06719690709436224, &#39;longitude&#39;), (0.06440669685484997, &#39;latitude&#39;), (0.0466410392743595, &#39;rooms_per_hhold&#39;), (0.04237340373514742, &#39;housing_median_age&#39;), (0.015439498816696278, &#39;total_rooms&#39;), (0.014622475673633123, &#39;total_bedrooms&#39;), (0.014446901635710547, &#39;population&#39;), (0.014251003503961687, &#39;households&#39;), (0.005806062399026538, &#39;&lt;1H OCEAN&#39;), (0.003696195680796238, &#39;NEAR OCEAN&#39;), (0.002125156528010462, &#39;NEAR BAY&#39;), (0.00012040320103397682, &#39;ISLAND&#39;)]</code></pre>
+<p>通过这个信息，我们就可以将那些不重要的变量丢弃(比如这里的ocean_proximity分类变量中除了INLAND外的其他类别)</p>
+</div>
+<div id="在测试集上评估模型系统" class="section level3">
+<h3>在测试集上评估模型系统</h3>
+<p>在测试集上的计算和前面的流程类似：</p>
+<pre class="python"><code>final_model = grid_search.best_estimator_
+
+X_test = strat_test_set.drop(&quot;median_house_value&quot;, axis=1) 
+y_test = strat_test_set[&quot;median_house_value&quot;].copy()
+
+X_test_prepared = full_pipeline.transform(X_test)##注意，仅仅是transform,使用在训练集上已经&quot;train&quot;的参数来transfrom测试集
+final_predictions = final_model.predict(X_test_prepared)
+
+final_mse = mean_squared_error(y_test, final_predictions)
+final_rmse = np.sqrt(final_mse)</code></pre>
+<p>有些时候，这样的点估计不太够，我们可以使用<code>scipy.stats.t.interval()</code>来计算置信区间：</p>
+<pre class="python"><code>from scipy import stats
+confidence = 0.95
+squared_errors = (final_predictions - y_test) ** 2
+
+np.sqrt(stats.t.interval(confidence, len(squared_errors) - 1,loc=squared_errors.mean(),scale=stats.sem(squared_errors)))
+&gt;&gt; array([45854.54440439, 49800.11971222])</code></pre>
+<p>最后就是部署模型了：
+<img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210203174058586.png" /></p>
+</div>
 </div>
