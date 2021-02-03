@@ -382,6 +382,8 @@ mtcars[25:nrow(mtcars), , drop = FALSE]
 
 ## Two-table verbs
 
+增加：[two-table](https://github.com/tidyverse/dplyr/blob/master/vignettes/two-table.Rmd)
+
 two-table verbs指的是合并两个数据框的操作，在dplyr中使用\*\_join操作代替base R中的各种merge操作：
 
 | dplyr                  | base                                     |
@@ -402,3 +404,96 @@ two-table verbs指的是合并两个数据框的操作，在dplyr中使用\*\_jo
 -   Set operations 将数据集的行作为集合的元素来操作
 
 ### Mutating joins
+
+Mutating join可以将两个table的变量结合到一起；比如在nycflights13数据中一个table有航班信息，并且每个航班有相应的航空公司的缩写，另一个table有航空公司的缩写和全称的对应信息，我们可以将这两个table合并：
+
+```{r}
+library("nycflights13")
+
+flights2 <- flights %>% select(year:day, hour, origin, dest, tailnum, carrier)
+
+flights2 %>% 
+  left_join(airlines)
+```
+
+#### 控制table如何匹配
+
+每一个Mutating join函数都有一个by参数，控制哪个变量被用来进行匹配
+
+-   `NULL` 默认值，使用两个table中共有的变量，比如flights和weather两个表的共有列为year, month, day, hour 和origin
+
+    ```{r}
+    flights2 %>% left_join(weather)
+    ```
+
+-   字符向量，`by="x"` 使用指定的变量进行匹配
+
+    ```{r}
+    flights2 %>% left_join(planes, by = "tailnum")
+
+    ##两个table的其他的共有列会加上后缀
+    ```
+
+-   具名字符向量，`by=c("a"="b")` 将一个table中的a变量与另一个table中的b变量进行匹配(输出中保留a)
+
+    ```{r}
+    flights2 %>% left_join(airports, c("dest" = "faa"))
+
+    flights2 %>% left_join(airports, c("origin" = "faa"))
+    ```
+
+#### 匹配的类型
+
+有4种类型的mutating join，他们的区别在于如何处理找不到匹配的情况
+
+```{r}
+##示例数据
+df1 <- tibble(x = c(1, 2), y = 2:1)
+df2 <- tibble(x = c(3, 1), a = 10, b = "a")
+
+df1
+
+df2
+```
+
+-   `inner_join(x,y)` 只包含x和y中都有的行
+
+    ```{r}
+    df1 %>% inner_join(df2)
+    ```
+
+-   `left_join(x,y)` 包含x的所有行，不管有没有匹配(没有匹配的为NA)
+
+    ```{r}
+    df1 %>% left_join(df2)
+    ```
+
+-   `right_join(x,y)` 包含y的所有行(和`left_join(y,x)` 的差别在于行和列的顺序不一样)
+
+    ```{r}
+    df1 %>% right_join(df2)
+
+    df2 %>% left_join(df1)
+    ```
+
+-   `full_join(x,y)` 包含x和y的所有行
+
+    ```{r}
+    df1 %>% full_join(df2)
+    ```
+
+需要注意的一点是：如果匹配不唯一(比如x里面用来匹配的变量有几行是一样的)，那么进行join时会加上所有可能的组合(笛卡尔积)：
+
+```{r}
+df1 <- tibble(x = c(1, 1, 2), y = 1:3)
+df2 <- tibble(x = c(1, 1, 2), z = c("a", "b", "a"))
+df1 %>% left_join(df2)
+```
+
+### Filtering joins
+
+filter join影响的是观测不是变量，有两种类型：
+
+-   `semi_join(x,y)` 保留x在y中有匹配的观测
+
+-   `anti_join(x,y)` 丢弃x在y中有匹配的观测
