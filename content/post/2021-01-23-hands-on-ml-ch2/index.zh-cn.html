@@ -1,5 +1,5 @@
 ---
-title: 【Ch2】Hands on Machine Learnig
+title: 【Ch2】Hands on Machine Learning
 author: wutao
 date: '2021-01-23'
 slug: hands_on_ml_ch2
@@ -1022,11 +1022,11 @@ tree_rmse_scores = np.sqrt(-scores)</code></pre>
   print(&quot;SD:&quot;,scores.std())
   
 display_scores(tree_rmse_scores)
-&gt;&gt; Scores: [68286.06060035 66962.00893493 71032.13272104 68837.15338159
-&gt;&gt;  70487.24536294 75725.19431996 70661.79639619 70762.53752476
-&gt;&gt;  75655.49212524 69117.67257064]
-&gt;&gt; Mean: 70752.72939376454
-&gt;&gt; SD: 2751.6588024234325</code></pre>
+&gt;&gt; Scores: [67685.34437301 67115.11466331 71277.96937617 67961.92400716
+&gt;&gt;  71950.86082034 74982.13481092 71037.58957118 71781.39110486
+&gt;&gt;  77243.50223465 69955.61884015]
+&gt;&gt; Mean: 71099.14498017626
+&gt;&gt; SD: 3045.221216824161</code></pre>
 <p>可以看到这个决策树模型在验证集上的误差比线性回归模型还要差;另外使用交叉验证除了可以估计模型的性能之外还可以衡量这个估计的精确度(标准差)</p>
 <p>我们再算一下线性回归模型的交叉验证结果：</p>
 <pre class="python"><code>lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels,
@@ -1054,16 +1054,16 @@ forest_rmse
 
 
 ##交叉验证
-&gt;&gt; 18778.52486921355
+&gt;&gt; 18627.96279042385
 forest_reg_score = cross_val_score(forest_reg,housing_prepared, housing_labels,scoring=&quot;neg_mean_squared_error&quot;, cv=10)
 
 forest_reg_rmse_scores = np.sqrt(-forest_reg_score)
 display_scores(forest_reg_rmse_scores)
-&gt;&gt; Scores: [49568.31834411 47573.50905854 49843.89198683 52188.97657477
-&gt;&gt;  49645.18070489 53713.98966125 49177.37646866 47924.02196311
-&gt;&gt;  53123.79565725 50083.21384355]
-&gt;&gt; Mean: 50284.227426296195
-&gt;&gt; SD: 1968.5877494065933</code></pre>
+&gt;&gt; Scores: [49618.07332125 47434.59434522 49907.52384133 52224.73682984
+&gt;&gt;  49521.65577529 53399.82195007 48949.28430427 48341.38479853
+&gt;&gt;  52923.00023023 50223.07866867]
+&gt;&gt; Mean: 50254.31540646949
+&gt;&gt; SD: 1878.1565827006089</code></pre>
 <p>随机森林的误差已经要小很多了，但是在训练集上的误差仍然要比在验证集上的误差小很多，说明还是有过拟合的(回顾：可以通过简化模型，加上正则项或者收集更多的数据)</p>
 <p>当我们实验了多个模型，应该将每个模型都保存起来，包括模型的超参数，训练参数，交叉验证的值，预测值等以便于模型间的比较，在Python中可以通过<code>pickle</code>模块或者<code>joblib</code>库来存储scikit-learn模型(jonlib在存储大的Numpy数组上更有效率)：</p>
 <pre class="python"><code>import joblib
@@ -1074,8 +1074,9 @@ my_model_loaded = joblib.load(&quot;my_model.pkl&quot;)</code></pre>
 </div>
 <div id="微调模型" class="section level2">
 <h2>微调模型</h2>
-<p>调整模型的超参数，有一下几种常用方法
-### 网格搜索</p>
+<p>调整模型的超参数，有以下几种常用方法</p>
+<div id="网格搜索" class="section level3">
+<h3>网格搜索</h3>
 <p>网格搜索就是类似于穷举法，尝试所有的可能；Scikit-learn提供了<code>GridSearchCV</code>来进行网格搜索并使用交叉验证来评估所有的超参数的组合：</p>
 <pre class="python"><code>from sklearn.model_selection import GridSearchCV
 
@@ -1095,36 +1096,37 @@ grid_search.fit(housing_prepared, housing_labels)
 <p>param_grid提供需要实验的超参数值，是一个列表，列表的元素是字典，每个字典里面是需要尝试的超参数的值，所以这里面就是：首先评估第一个字典中的<code>3*4</code>个超参数的组合，一共12个模型，再评估第二个字典中的<code>2*3</code>个超参数的组合，一个6个模型，所以总的需要评估12+6=18个模型，对每个模型训练5次(交叉验证中CV=5)</p>
 <p>得到的最好的结果存储在<code>best_params_</code>中：</p>
 <pre class="python"><code>grid_search.best_params_
-&gt;&gt; {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 30}</code></pre>
+&gt;&gt; {&#39;max_features&#39;: 6, &#39;n_estimators&#39;: 30}</code></pre>
 <p>整个模型在<code>best_estimator_</code>中</p>
 <pre class="python"><code>grid_search.best_estimator_
-&gt;&gt; RandomForestRegressor(max_features=8, n_estimators=30)</code></pre>
+&gt;&gt; RandomForestRegressor(max_features=6, n_estimators=30)</code></pre>
 <p>我们也可以得到每个超参数组合的交叉验证的score：</p>
 <pre class="python"><code>cvres = grid_search.cv_results_
 
 ##平均误差
 for mean_score, params in zip(cvres[&quot;mean_test_score&quot;], cvres[&quot;params&quot;]):
   print(np.sqrt(-mean_score), params)
-&gt;&gt; 65213.75868027239 {&#39;max_features&#39;: 2, &#39;n_estimators&#39;: 3}
-&gt;&gt; 55731.68677148771 {&#39;max_features&#39;: 2, &#39;n_estimators&#39;: 10}
-&gt;&gt; 52985.54401059915 {&#39;max_features&#39;: 2, &#39;n_estimators&#39;: 30}
-&gt;&gt; 61302.649468816366 {&#39;max_features&#39;: 4, &#39;n_estimators&#39;: 3}
-&gt;&gt; 52966.10861924791 {&#39;max_features&#39;: 4, &#39;n_estimators&#39;: 10}
-&gt;&gt; 50350.65690058004 {&#39;max_features&#39;: 4, &#39;n_estimators&#39;: 30}
-&gt;&gt; 59616.14238079233 {&#39;max_features&#39;: 6, &#39;n_estimators&#39;: 3}
-&gt;&gt; 52136.80466008028 {&#39;max_features&#39;: 6, &#39;n_estimators&#39;: 10}
-&gt;&gt; 49991.6496554798 {&#39;max_features&#39;: 6, &#39;n_estimators&#39;: 30}
-&gt;&gt; 59161.13557248417 {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 3}
-&gt;&gt; 52157.34457878917 {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 10}
-&gt;&gt; 49886.378595634924 {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 30}
-&gt;&gt; 62707.1993667148 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 2, &#39;n_estimators&#39;: 3}
-&gt;&gt; 54367.859604118734 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 2, &#39;n_estimators&#39;: 10}
-&gt;&gt; 60599.57935292836 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 3, &#39;n_estimators&#39;: 3}
-&gt;&gt; 52902.30939223794 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 3, &#39;n_estimators&#39;: 10}
-&gt;&gt; 59088.36401959815 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 4, &#39;n_estimators&#39;: 3}
-&gt;&gt; 51912.57885539316 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 4, &#39;n_estimators&#39;: 10}</code></pre>
+&gt;&gt; 63986.741513513545 {&#39;max_features&#39;: 2, &#39;n_estimators&#39;: 3}
+&gt;&gt; 55877.8681750711 {&#39;max_features&#39;: 2, &#39;n_estimators&#39;: 10}
+&gt;&gt; 52820.187104365265 {&#39;max_features&#39;: 2, &#39;n_estimators&#39;: 30}
+&gt;&gt; 60197.6444526711 {&#39;max_features&#39;: 4, &#39;n_estimators&#39;: 3}
+&gt;&gt; 53182.33945169263 {&#39;max_features&#39;: 4, &#39;n_estimators&#39;: 10}
+&gt;&gt; 50769.30427128755 {&#39;max_features&#39;: 4, &#39;n_estimators&#39;: 30}
+&gt;&gt; 58855.50060724054 {&#39;max_features&#39;: 6, &#39;n_estimators&#39;: 3}
+&gt;&gt; 52136.60935121497 {&#39;max_features&#39;: 6, &#39;n_estimators&#39;: 10}
+&gt;&gt; 49955.19205575474 {&#39;max_features&#39;: 6, &#39;n_estimators&#39;: 30}
+&gt;&gt; 58963.53417689702 {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 3}
+&gt;&gt; 51955.05007856002 {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 10}
+&gt;&gt; 50209.846646108126 {&#39;max_features&#39;: 8, &#39;n_estimators&#39;: 30}
+&gt;&gt; 63447.2576666145 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 2, &#39;n_estimators&#39;: 3}
+&gt;&gt; 54455.06044688375 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 2, &#39;n_estimators&#39;: 10}
+&gt;&gt; 60295.719963554926 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 3, &#39;n_estimators&#39;: 3}
+&gt;&gt; 52786.332882981915 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 3, &#39;n_estimators&#39;: 10}
+&gt;&gt; 58728.37051642196 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 4, &#39;n_estimators&#39;: 3}
+&gt;&gt; 51804.733148008454 {&#39;bootstrap&#39;: False, &#39;max_features&#39;: 4, &#39;n_estimators&#39;: 10}</code></pre>
 <p>使用max_feature=8和n_estimators=30得到的误差为49682，比之前要好，说明微调模型是有效果的</p>
 <p>注意：一些数据处理的步骤也可以认为是超参数，比如前面的是否添加一些合并的变量(add_bedrooms_per_room)，缺失值的处理，特征选择等；也可以使用类似的方法进行调整</p>
+</div>
 <div id="随机搜索" class="section level3">
 <h3>随机搜索</h3>
 <p>当超参数的搜索空间比较大的时候，使用随机搜索的方法比较好
@@ -1144,16 +1146,16 @@ for mean_score, params in zip(cvres[&quot;mean_test_score&quot;], cvres[&quot;pa
 <pre class="python"><code>feature_importances = grid_search.best_estimator_.feature_importances_
 
 feature_importances
-&gt;&gt; array([6.71969071e-02, 6.44066969e-02, 4.23734037e-02, 1.54394988e-02,
-&gt;&gt;        1.46224757e-02, 1.44469016e-02, 1.42510035e-02, 3.71297702e-01,
-&gt;&gt;        4.66410393e-02, 1.15727671e-01, 6.76645362e-02, 5.80606240e-03,
-&gt;&gt;        1.54184346e-01, 1.20403201e-04, 2.12515653e-03, 3.69619568e-03])
+&gt;&gt; array([7.36553708e-02, 6.24640816e-02, 4.15540395e-02, 1.78940504e-02,
+&gt;&gt;        1.73092026e-02, 1.82674789e-02, 1.61906336e-02, 3.29340543e-01,
+&gt;&gt;        5.45794045e-02, 1.04675449e-01, 7.64102745e-02, 1.34028913e-02,
+&gt;&gt;        1.64928843e-01, 1.04520685e-04, 4.01632472e-03, 5.20689102e-03])
 extra_attribs = [&quot;rooms_per_hhold&quot;, &quot;pop_per_hhold&quot;, &quot;bedrooms_per_room&quot;]
 cat_encoder = full_pipeline.named_transformers_[&quot;cat&quot;]
 cat_one_hot_attribs = list(cat_encoder.categories_[0])
 attributes = num_attribs + extra_attribs + cat_one_hot_attribs
 sorted(zip(feature_importances, attributes), reverse=True)
-&gt;&gt; [(0.3712977022475445, &#39;median_income&#39;), (0.15418434615348134, &#39;INLAND&#39;), (0.11572767096237938, &#39;pop_per_hhold&#39;), (0.06766453623900677, &#39;bedrooms_per_room&#39;), (0.06719690709436224, &#39;longitude&#39;), (0.06440669685484997, &#39;latitude&#39;), (0.0466410392743595, &#39;rooms_per_hhold&#39;), (0.04237340373514742, &#39;housing_median_age&#39;), (0.015439498816696278, &#39;total_rooms&#39;), (0.014622475673633123, &#39;total_bedrooms&#39;), (0.014446901635710547, &#39;population&#39;), (0.014251003503961687, &#39;households&#39;), (0.005806062399026538, &#39;&lt;1H OCEAN&#39;), (0.003696195680796238, &#39;NEAR OCEAN&#39;), (0.002125156528010462, &#39;NEAR BAY&#39;), (0.00012040320103397682, &#39;ISLAND&#39;)]</code></pre>
+&gt;&gt; [(0.3293405434812703, &#39;median_income&#39;), (0.16492884322614265, &#39;INLAND&#39;), (0.10467544923371161, &#39;pop_per_hhold&#39;), (0.0764102744593431, &#39;bedrooms_per_room&#39;), (0.07365537078019839, &#39;longitude&#39;), (0.062464081641909294, &#39;latitude&#39;), (0.054579404478067584, &#39;rooms_per_hhold&#39;), (0.041554039487133584, &#39;housing_median_age&#39;), (0.0182674788916193, &#39;population&#39;), (0.01789405042803859, &#39;total_rooms&#39;), (0.01730920255835933, &#39;total_bedrooms&#39;), (0.01619063364980485, &#39;households&#39;), (0.013402891256901797, &#39;&lt;1H OCEAN&#39;), (0.005206891017924707, &#39;NEAR OCEAN&#39;), (0.004016324724642379, &#39;NEAR BAY&#39;), (0.00010452068493264605, &#39;ISLAND&#39;)]</code></pre>
 <p>通过这个信息，我们就可以将那些不重要的变量丢弃(比如这里的ocean_proximity分类变量中除了INLAND外的其他类别)</p>
 </div>
 <div id="在测试集上评估模型系统" class="section level3">
@@ -1175,7 +1177,7 @@ confidence = 0.95
 squared_errors = (final_predictions - y_test) ** 2
 
 np.sqrt(stats.t.interval(confidence, len(squared_errors) - 1,loc=squared_errors.mean(),scale=stats.sem(squared_errors)))
-&gt;&gt; array([45854.54440439, 49800.11971222])</code></pre>
+&gt;&gt; array([45968.11922485, 49849.93704767])</code></pre>
 <p>最后就是部署模型了：
 <img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210203174058586.png" /></p>
 </div>

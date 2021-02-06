@@ -1,5 +1,5 @@
 ---
-title: 【Ch2】Hands on Machine Learnig
+title: 【Ch2】Hands on Machine Learning
 author: wutao
 date: '2021-01-23'
 slug: hands_on_ml_ch2
@@ -512,7 +512,9 @@ my_model_loaded = joblib.load("my_model.pkl")
 ```
 
 ## 微调模型
-调整模型的超参数，有一下几种常用方法
+
+调整模型的超参数，有以下几种常用方法
+
 ### 网格搜索
 
 网格搜索就是类似于穷举法，尝试所有的可能；Scikit-learn提供了`GridSearchCV`来进行网格搜索并使用交叉验证来评估所有的超参数的组合：
