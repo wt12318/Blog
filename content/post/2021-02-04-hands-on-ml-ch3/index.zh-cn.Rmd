@@ -10,7 +10,7 @@ tags:
   - python
   - ML
   
-image : "image1.png"
+image : "image1.jpg"
 ---
 
 ```{r setup, include=FALSE}

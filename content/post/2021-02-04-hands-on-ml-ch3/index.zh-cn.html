@@ -10,7 +10,7 @@ tags:
   - python
   - ML
   
-image : "image1.png"
+image : "image1.jpg"
 ---
 
 <script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
@@ -47,7 +47,7 @@ import matplotlib.pyplot as plt
 some_digit = X[0] 
 some_digit_image = some_digit.reshape(28, 28) 
 plt.imshow(some_digit_image,cmap=&quot;binary&quot;) 
-&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x000000000635B760&gt;
+&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x00000000054281C0&gt;
 plt.axis(&quot;off&quot;) 
 &gt;&gt; (-0.5, 27.5, 27.5, -0.5)
 plt.show()</code></pre>
@@ -184,13 +184,13 @@ plt.figure(figsize=(8, 4))            </code></pre>
 <p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-3.png" width="768" /></p>
 <pre class="python"><code>plot_precision_recall_vs_threshold(precisions, recalls, thresholds)
 plt.plot([threshold_90_precision, threshold_90_precision], [0., 0.9], &quot;r:&quot;)      
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000006475C10&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000551A5E0&gt;]
 plt.plot([-50000, threshold_90_precision], [0.9, 0.9], &quot;r:&quot;)          
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000006475E80&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000551A9D0&gt;]
 plt.plot([-50000, threshold_90_precision], [recall_90_precision, recall_90_precision], &quot;r:&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000647C3A0&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000551ADF0&gt;]
 plt.plot([threshold_90_precision], [0.9], &quot;ro&quot;)                           
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000647C7C0&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000005528160&gt;]
 plt.plot([threshold_90_precision], [recall_90_precision], &quot;ro&quot;)           </code></pre>
 <p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-5.png" width="768" /></p>
 <pre class="python"><code>plt.show()</code></pre>
@@ -208,9 +208,9 @@ plt.figure(figsize=(8, 6))</code></pre>
 <p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-9.png" width="768" /></p>
 <pre class="python"><code>plot_precision_vs_recall(precisions, recalls)
 plt.plot([recall_90_precision, recall_90_precision], [0., 0.9], &quot;r:&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000685B7C0&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000055A7F70&gt;]
 plt.plot([0.0, recall_90_precision], [0.9, 0.9], &quot;r:&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000685BBB0&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000059052E0&gt;]
 plt.plot([recall_90_precision], [0.9], &quot;ro&quot;)</code></pre>
 <p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-11.png" width="768" /></p>
 <pre class="python"><code>plt.show()</code></pre>
@@ -251,9 +251,9 @@ plt.figure(figsize=(8, 6))                  </code></pre>
 <pre class="python"><code>plot_roc_curve(fpr, tpr)
 fpr_90 = fpr[np.argmax(tpr &gt;= recall_90_precision)]          
 plt.plot([fpr_90, fpr_90], [0., recall_90_precision], &quot;r:&quot;) 
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000686CDF0&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000005926CA0&gt;]
 plt.plot([0.0, fpr_90], [recall_90_precision, recall_90_precision], &quot;r:&quot;) 
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000010450820&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000005905400&gt;]
 plt.plot([fpr_90], [recall_90_precision], &quot;ro&quot;)               </code></pre>
 <p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-17.png" width="768" /></p>
 <pre class="python"><code>plt.show()</code></pre>
@@ -286,10 +286,10 @@ fpr_forest, tpr_forest, thresholds_forest = roc_curve(y_train_5,y_scores_forest)
 
 ##plot
 plt.plot(fpr, tpr, &quot;b:&quot;, label=&quot;SGD&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000F3D9670&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000123B69A0&gt;]
 plot_roc_curve(fpr_forest, tpr_forest, &quot;Random Forest&quot;) 
 plt.legend(loc=&quot;lower right&quot;) 
-&gt;&gt; &lt;matplotlib.legend.Legend object at 0x000000000F3D9970&gt;
+&gt;&gt; &lt;matplotlib.legend.Legend object at 0x00000000123B6FD0&gt;
 plt.show()</code></pre>
 <p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-21.png" width="768" /></p>
 <pre class="python"><code>roc_auc_score(y_train_5, y_scores_forest)
@@ -356,7 +356,7 @@ conf_mx
 &gt;&gt;       dtype=int64)</code></pre>
 <p>可以用热图的形式将混淆矩阵可视化：</p>
 <pre class="python"><code>plt.matshow(conf_mx, cmap=plt.cm.gray)
-&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x000000000F422AF0&gt;
+&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x000000000E3A0DC0&gt;
 plt.show()</code></pre>
 <p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-23.png" width="480" /></p>
 <p>从这个图来看，结果是比较好的，因为大部分都集中在对角线上，但是这里面查看的是绝对数值，可能某个类的总数就比较小，比如5类，因此我们将混淆矩阵中的每个值除以相应类的图片总数(行和)得到相对值：</p>
@@ -366,7 +366,7 @@ norm_conf_mx = conf_mx / row_sums</code></pre>
 <pre class="python"><code>np.fill_diagonal(norm_conf_mx, 0)##对角线归0
 
 plt.matshow(norm_conf_mx, cmap=plt.cm.gray)
-&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x000000000FB81040&gt;
+&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x000000000EB011C0&gt;
 plt.show()</code></pre>
 <p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-25.png" width="480" /></p>
 <p>可以看到8类的列最亮，也就是说很多图片都被错误地分成8了；另外3和5也是经常被相互错分的</p>

@@ -8,7 +8,7 @@ categories:
 tags:
   - ML
   - notes
-image : "image1.png"
+image : "image1.jpg"
 ---
 
 第一章：The Machine Learning Landscape
