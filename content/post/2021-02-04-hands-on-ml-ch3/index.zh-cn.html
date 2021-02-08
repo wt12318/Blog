@@ -31,11 +31,10 @@ data = np.loadtxt(&quot;../test/mnist_784.csv&quot;,delimiter=&quot;,&quot;,skip
 
 data.shape
 
-###data without lable
 &gt;&gt; (70000, 785)
-X = data[:,0:784]
-###lable
-y = data[:,784]
+X = data[:,0:784]###data without lable
+
+y = data[:,784]###lable
 
 X.shape
 &gt;&gt; (70000, 784)
@@ -48,7 +47,7 @@ import matplotlib.pyplot as plt
 some_digit = X[0] 
 some_digit_image = some_digit.reshape(28, 28) 
 plt.imshow(some_digit_image,cmap=&quot;binary&quot;) 
-&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x0000000006B3B760&gt;
+&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x000000000635B760&gt;
 plt.axis(&quot;off&quot;) 
 &gt;&gt; (-0.5, 27.5, 27.5, -0.5)
 plt.show()</code></pre>
@@ -182,19 +181,20 @@ threshold_90_precision = thresholds[np.argmax(precisions &gt;= 0.90)]
 
 
 plt.figure(figsize=(8, 4))            </code></pre>
-plot_precision_recall_vs_threshold(precisions, recalls, thresholds)
-plt.plot([threshold_90_precision, threshold_90_precision], [0., 0.9], "r:")      
->> [<matplotlib.lines.Line2D object at 0x0000000006517C40>]
-plt.plot([-50000, threshold_90_precision], [0.9, 0.9], "r:")          
->> [<matplotlib.lines.Line2D object at 0x0000000006521040>]
-plt.plot([-50000, threshold_90_precision], [recall_90_precision, recall_90_precision], "r:")
->> [<matplotlib.lines.Line2D object at 0x000000000AF70C10>]
-plt.plot([threshold_90_precision], [0.9], "ro")                           
->> [<matplotlib.lines.Line2D object at 0x0000000006521580>]
-plt.plot([threshold_90_precision], [recall_90_precision], "ro")           
->> [<matplotlib.lines.Line2D object at 0x00000000065219D0>]
-plt.show()
 <p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-3.png" width="768" /></p>
+<pre class="python"><code>plot_precision_recall_vs_threshold(precisions, recalls, thresholds)
+plt.plot([threshold_90_precision, threshold_90_precision], [0., 0.9], &quot;r:&quot;)      
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000006475C10&gt;]
+plt.plot([-50000, threshold_90_precision], [0.9, 0.9], &quot;r:&quot;)          
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000006475E80&gt;]
+plt.plot([-50000, threshold_90_precision], [recall_90_precision, recall_90_precision], &quot;r:&quot;)
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000647C3A0&gt;]
+plt.plot([threshold_90_precision], [0.9], &quot;ro&quot;)                           
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000647C7C0&gt;]
+plt.plot([threshold_90_precision], [recall_90_precision], &quot;ro&quot;)           </code></pre>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-5.png" width="768" /></p>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-7.png" width="768" /></p>
 <p>注意：当提高阈值时，precision不一定总是上升的(以上面那个轴为例，当阈值从中间向右移动一位precision就会下降：4/5→3/4);但是Recall总是下降的</p>
 <p>另外，我们也可以直接展示precision和recall的关系：</p>
 <pre class="python"><code>def plot_precision_vs_recall(precisions, recalls):
@@ -205,15 +205,16 @@ plt.show()
     plt.grid(True)
 
 plt.figure(figsize=(8, 6))</code></pre>
-plot_precision_vs_recall(precisions, recalls)
-plt.plot([recall_90_precision, recall_90_precision], [0., 0.9], "r:")
->> [<matplotlib.lines.Line2D object at 0x0000000006F0A2E0>]
-plt.plot([0.0, recall_90_precision], [0.9, 0.9], "r:")
->> [<matplotlib.lines.Line2D object at 0x0000000006F0A700>]
-plt.plot([recall_90_precision], [0.9], "ro")
->> [<matplotlib.lines.Line2D object at 0x0000000006F0ABB0>]
-plt.show()
-<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-5.png" width="768" /></p>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-9.png" width="768" /></p>
+<pre class="python"><code>plot_precision_vs_recall(precisions, recalls)
+plt.plot([recall_90_precision, recall_90_precision], [0., 0.9], &quot;r:&quot;)
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000685B7C0&gt;]
+plt.plot([0.0, recall_90_precision], [0.9, 0.9], &quot;r:&quot;)
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000685BBB0&gt;]
+plt.plot([recall_90_precision], [0.9], &quot;ro&quot;)</code></pre>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-11.png" width="768" /></p>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-13.png" width="768" /></p>
 <p>假如我们现在想要分类器达到90%的precision，可以使用numpy的np.argmax函数(返回第一个最大值的index)：</p>
 <pre class="python"><code>threshold_90_precision = thresholds[np.argmax(precisions &gt;= 0.90)]##true是1，false是0，因此返回第一个1，也就是第一个true的位置
 
@@ -245,17 +246,18 @@ def plot_roc_curve(fpr, tpr, label=None):
     plt.ylabel(&#39;True Positive Rate (Recall)&#39;, fontsize=16)  
     plt.grid(True)
 
-plt.figure(figsize=(8, 6))                                   </code></pre>
-plot_roc_curve(fpr, tpr)
-fpr_90 = fpr[np.argmax(tpr >= recall_90_precision)]          
-plt.plot([fpr_90, fpr_90], [0., recall_90_precision], "r:") 
->> [<matplotlib.lines.Line2D object at 0x000000000B420280>]
-plt.plot([0.0, fpr_90], [recall_90_precision, recall_90_precision], "r:") 
->> [<matplotlib.lines.Line2D object at 0x000000000B420CA0>]
-plt.plot([fpr_90], [recall_90_precision], "ro")               
->> [<matplotlib.lines.Line2D object at 0x000000000B418EB0>]
-plt.show()
-<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-7.png" width="768" /></p>
+plt.figure(figsize=(8, 6))                  </code></pre>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-15.png" width="768" /></p>
+<pre class="python"><code>plot_roc_curve(fpr, tpr)
+fpr_90 = fpr[np.argmax(tpr &gt;= recall_90_precision)]          
+plt.plot([fpr_90, fpr_90], [0., recall_90_precision], &quot;r:&quot;) 
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000686CDF0&gt;]
+plt.plot([0.0, fpr_90], [recall_90_precision, recall_90_precision], &quot;r:&quot;) 
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000010450820&gt;]
+plt.plot([fpr_90], [recall_90_precision], &quot;ro&quot;)               </code></pre>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-17.png" width="768" /></p>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-19.png" width="768" /></p>
 <p>图中的虚线表示完全随机的分类器的ROC曲线，一个好的分类器要尽可能离这条线远，并且向左上角靠拢(高的recall并且比较低的假阳性)</p>
 <p>一种比较不同的分类器的方法就是计算ROC曲线下面积(AUC)，越接近1说明这个模型越好(图中虚线的AUC是0.5)：</p>
 <pre class="python"><code>from sklearn.metrics import roc_auc_score
@@ -284,12 +286,12 @@ fpr_forest, tpr_forest, thresholds_forest = roc_curve(y_train_5,y_scores_forest)
 
 ##plot
 plt.plot(fpr, tpr, &quot;b:&quot;, label=&quot;SGD&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000D2EB3D0&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000000F3D9670&gt;]
 plot_roc_curve(fpr_forest, tpr_forest, &quot;Random Forest&quot;) 
 plt.legend(loc=&quot;lower right&quot;) 
-&gt;&gt; &lt;matplotlib.legend.Legend object at 0x000000000D2EBDC0&gt;
+&gt;&gt; &lt;matplotlib.legend.Legend object at 0x000000000F3D9970&gt;
 plt.show()</code></pre>
-<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-9.png" width="768" /></p>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-21.png" width="768" /></p>
 <pre class="python"><code>roc_auc_score(y_train_5, y_scores_forest)
 &gt;&gt; 0.9983436731328145</code></pre>
 </div>
@@ -354,9 +356,9 @@ conf_mx
 &gt;&gt;       dtype=int64)</code></pre>
 <p>可以用热图的形式将混淆矩阵可视化：</p>
 <pre class="python"><code>plt.matshow(conf_mx, cmap=plt.cm.gray)
-&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x000000000D332700&gt;
+&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x000000000F422AF0&gt;
 plt.show()</code></pre>
-<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-11.png" width="480" /></p>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-23.png" width="480" /></p>
 <p>从这个图来看，结果是比较好的，因为大部分都集中在对角线上，但是这里面查看的是绝对数值，可能某个类的总数就比较小，比如5类，因此我们将混淆矩阵中的每个值除以相应类的图片总数(行和)得到相对值：</p>
 <pre class="python"><code>row_sums = conf_mx.sum(axis=1, keepdims=True)
 norm_conf_mx = conf_mx / row_sums</code></pre>
@@ -364,9 +366,9 @@ norm_conf_mx = conf_mx / row_sums</code></pre>
 <pre class="python"><code>np.fill_diagonal(norm_conf_mx, 0)##对角线归0
 
 plt.matshow(norm_conf_mx, cmap=plt.cm.gray)
-&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x000000000D368AF0&gt;
+&gt;&gt; &lt;matplotlib.image.AxesImage object at 0x000000000FB81040&gt;
 plt.show()</code></pre>
-<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-13.png" width="480" /></p>
+<p><img src="/post/2021-02-04-hands-on-ml-ch3/index.zh-cn_files/figure-html/unnamed-chunk-2-25.png" width="480" /></p>
 <p>可以看到8类的列最亮，也就是说很多图片都被错误地分成8了；另外3和5也是经常被相互错分的</p>
 <p>我们可以针对这种错误来想办法提升模型，例如：可以收集更多的图片，这些图片长得像8但又不是8，用这些数据作为训练集；还可以编码一些新的特征，比如图像中闭环的数目(8有2个，6有1个，5没有)；也可以对图像进行预处理(使图像居中，突出某些特征等)</p>
 </div>
