@@ -44,12 +44,12 @@ params:
 
     comments:
         enabled: true
-        provider: disqus
+        provider: utterances
         utterances:
-            repo:
-            issueTerm: pathname
+            repo: wt12318/comments 
+            issueTerm: title
             label:
-            theme: preferred-color-scheme
+            theme: github-light
 
     widgets:
         enabled:
