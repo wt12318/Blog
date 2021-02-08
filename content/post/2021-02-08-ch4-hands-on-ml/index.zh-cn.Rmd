@@ -1,0 +1,20 @@
+---
+title: 【Ch4】Hands on Machine Learning
+author: wutao
+date: '2021-02-08'
+slug: ch4_hands_on_ml
+categories:
+  - reading notes
+tags:
+  - ML
+  - notes
+  - python
+image : "image1.png"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE,comment=">>",
+                      engine.path = list(python = 'C:\\Users\\16504\\AppData\\Local\\Programs\\Python\\Python38\\python.exe'))
+```
+
+
