@@ -1,0 +1,400 @@
+---
+title: 天池python---Task1
+author: wutao
+date: '2021-02-13'
+slug: python_task1
+categories:
+  - python
+tags:
+  - notes
+  - python
+image : "python.jpg"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE,comment=">>",
+                      engine.path = list(python = 'C:\\Users\\16504\\AppData\\Local\\Programs\\Python\\Python38\\python.exe'))
+```
+
+Task1 主要包含以下内容：
+
+-   变量，运算符和基本数据类型
+
+-   位运算
+
+-   条件语句
+
+-   循环语句
+
+-   异常处理
+
+## 变量，运算符和基本数据类型
+
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210213221003385.png)
+
+```{python}
+abc = "hello"
+b1_ = 7
+_b = 1
+第一个变量 = "hello world" ##可以使用中文
+
+print(第一个变量)
+```
+
+```{python eval=FALSE, include=TRUE}
+1a = "hello" ##不能以数字开头
+
+File "<ipython-input-1-ef2f4120639d>", line 1
+    1a = "hello"
+     ^
+SyntaxError: invalid syntax
+```
+
+### 运算符
+
+运算符有以下几类：
+
+- 算术运算符
+- 比较运算符
+- 逻辑运算符
+- 位运算符
+- 三元运算符
+- 其他运算符
+
+
+算术运算符：
+
+操作符 | 名称 | 示例
+:---:|:---:|:---:
+`+` | 加 | `1 + 1`
+`-` | 减 | `2 - 1`
+`*` | 乘 | `3 * 4`
+`/` | 除 | `3 / 4`
+`//`| 整除| `3 // 4`
+`%` | 取余| `3 % 4`
+`**`| 幂 | `2 ** 3`
+
+```{python}
+3 // 4
+
+4 // 3
+
+4 % 3
+```
+
+比较运算符(结果是布尔值True/False)：
+
+操作符 | 名称 | 示例
+:---:|:---:|:---:
+`>` |大于| `2 > 1`
+`>=`|大于等于| `2 >= 4`
+`<` |小于| `1 < 2`
+`<=`|小于等于| `5 <= 2`
+`==`|等于| `3 == 4`
+`!=`|不等于| `3 != 5`
+
+```{python}
+3 >= 4 
+
+3 != 5
+```
+
+逻辑运算符(结果也是布尔值True/False):
+
+操作符 | 名称 | 示例
+:---:|:---:|:---:
+`and`|与| `(3 > 2) and (3 < 5)`
+`or` |或| `(1 > 3) or (9 < 2)`
+`not`|非| `not (2 > 1)`
+
+```{python}
+( 3 >= 4 ) and ( 3 !=5 )
+
+( 3 >= 4 ) or ( 3 !=5 )
+
+not( 3 !=5 )
+```
+
+位运算符:
+
+操作符 | 名称 | 示例
+:---:|:---:|:---:
+`~` |按位取反|`~4`
+`&` |按位与  |`4 & 5`
+`|` |按位或  |`4 | 5`
+`^` |按位异或|`4 ^ 5`
+`<<`|左移    |`4 << 2`
+`>>`|右移    |`4 >> 2`
+
+三元运算符,也叫条件表达式，可以简化条件判断和赋值操作：
+
+```{python}
+#condition_is_true if condition else condition_is_false
+##如果条件为真，则返回if前面的结果，如果为假则返回else后面的结果
+
+x = "hello"
+
+print("x 是一个字符") if isinstance(x,str) else print("x 不是字符")
+```
+
+其他运算符：
+
+操作符 | 名称 | 示例
+:---:|:---:|:---:
+`in`|存在| `'A' in ['A', 'B', 'C']`
+`not in`|不存在|`'h' not in ['A', 'B', 'C']`
+`is`|是| `"hello" is "hello"`
+`not is`|不是|`"hello" is not "hello"`
+
+需要注意的是`is`/`not is` 和`==`/`!=`的区别，`is`/`not is`比较的是内存地址，而`==`/`!=`比较的是变量的值
+
+```{python}
+###不可变类型，两者是一样的；因为对于不可变类型，值一样内存地址就一样
+x = "hello"
+id(x) ##使用id查看内存地址
+
+y = "hello"
+id(y)
+
+x == y
+x is y
+id(x) == id(y)
+```
+
+```{python}
+###对于可变类型，两者是有区别的
+a = [1,2,3]
+id(a)
+
+b = [1,2,3]
+id(b)
+
+id(a) == id(b)
+a == b
+a is b
+```
+
+
+运算符的优先级：
+
+| 运算符 | 描述 |
+|-----|-----|
+| ** | 指数（最高优先级）   |
+| ~+- | 按位翻转，一元加号和减号 |
+| * / % // | 乘，除，取模和取整除）   |
+| + - | 加法减法 |
+| >> << | 右移，左移运算符 |
+|&| 位‘AND’|
+| ^\| | 位运算符  |
+| <=<>>=| 比较运算符 |
+| <>==!= | 等于运算符  |
+| =%=/=//=-=+=*=**= | 赋值运算符 |
+| is is not | 身份运算符   |
+| in not in | 成员运算符 |
+| not and or | 逻辑运算符   |
+
+### 基本数据类型
+
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210214114944454.png)
+
+基本数据类型包括：整型，浮点型和布尔型
+
+类型 | 名称 | 示例
+:---:|:---:|:---:
+int | 整型 `<class 'int'>`| `-876, 10`
+float | 浮点型`<class 'float'>`| `3.149, 11.11`
+bool | 布尔型`<class 'bool'>` | `True, False`
+
+可以通过`type`或者`isinstance`来获取对象的类：
+
+```{python}
+x = 123
+type(x)
+isinstance(x,int)
+```
+
+两者的区别是：`type`不考虑继承关系，而`isinstance`考虑继承关系：
+
+```{python}
+class A:
+    pass
+ 
+class B(A):
+    pass
+##B(A)表示B继承A
+
+type(A()) == A
+type(B()) == A
+isinstance(B(),A)
+```
+
+对于**浮点数**，有时候我们想要控制其显示的小数点位数，可以使用decimal 包里的 Decimal 对象和 getcontext() 方法：
+
+```{python}
+import decimal
+from decimal import Decimal
+
+a = decimal.getcontext()
+a
+```
+
+其中prec=28表示默认精度是28位：
+
+```{python}
+1/3
+Decimal(1)/Decimal(3)
+```
+
+用 getcontext().prec 来调整精度,使其保留小数点后4位：
+
+```{python}
+decimal.getcontext().prec = 4
+Decimal(1)/Decimal(3)
+```
+对于**布尔值**, 除了直接将True和False赋值给布尔型变量之外，还可以使用`bool`函数来创建布尔型变量，这个函数的参数可以有两种类型：
+ 
+- 基本数据类型：整型，浮点型和布尔型
+- 容器数据类型：字符串，列表，元组，字典和集合
+
+对于基本数据类型：0(包括整型的0和浮点型的0.0)是False，其他都是True           
+对于容器数据类型：空的就是False，非空的就是True
+
+```{python}
+bool(0)
+bool(0.00)
+bool(1)
+bool("hello")
+
+bool([])
+bool([1])
+bool({})
+bool({"a":1})
+
+```
+
+## 位运算
+
+计算机中的数在内存中都是以二进制形式进行存储的，位运算就是直接对数在内存中的二进制位来进行操作，具有较高的效率；二进制有3种表示形式：原码，反码和补码
+**计算机内部使用补码来表示**
+
+- 原码：正常的二进制表示(负数有一个符号位)；比如`00 00 00 11`表示的数为3，`10 00 00 11`表示的数为-3，最高位(最左边)为符号位(0表示正，1表示负)
+
+- 反码：正数的反码和原码一样，负数的反码是对应正数原码进行按位取反，比如3的原码和反码是一样的，而-3的反码是`11 11 11 00`
+
+- 补码：正数的补码和原码一样，负数的补码为反码加1，比如-3的补码为`11 11 11 01` 
+
+### 按位运算
+
+- 按位非: `~`
+
+`~ num`表示将num的补码进行取反(0变成1，1变成0，包括符号位)
+
+```{python}
+~ 1 ###1的原码为00 00 00 01;补码和原码一样，所以取反后为11 11 11 10是负数，
+##所以转化成十进制为数值位取反加1：0 00 00 01+1=0 00 00 10 为2 再加上符号，因此为-2
+
+```
+- 按位与操作: `&`
+
+这是一个二元操作符，只有两个对应位都是1时结果才为1
+
+```{python}
+1 & 1
+
+1 & -2
+##1的补码为00 00 00 01；-2的原码为10 00 00 10，补码为00 00 00 10按位取反得11 11 11 01再加1为11 11 11 10
+##所以 与操作 结果为00 00 00 00 为0
+```
+
+- 按位或操作：`|`
+
+只要两个对应位中有一个为1结果就为1
+
+```{python}
+1 | 1
+
+1 | -2 ##11 11 11 11转化为10进制：10 00 00 01 = -1
+```
+
+- 按位异或操作：`^`
+
+两个对应位不同时结果才是1
+
+```{python}
+1 ^ -2 ##11 11 11 11 结果也是-1
+```
+
+- 按位左移和右移操作
+
+`num << i`将num得二进制表示(1的位置)向左移动i位，`>>`表示向右移动：
+
+```{python}
+11 << 3 ##11的补码为00 00 10 11将所有的1向左移3位得到：01 01 10 00为88
+
+11 >> 3 ##右移3位得到 00 00 00 01为1
+
+```
+
+## 条件语句
+
+- if语句：
+```{python eval=FALSE}
+if expression:
+    expr_true_suite
+```
+只有当expression为真，才执行语句expr_true_suite
+
+- if-else 语句：
+```{python eval=FALSE}
+if expression:
+    expr_true_suite
+else:
+    expr_false_suite
+```
+
+expression为真执行expr_true_suite，否则执行expr_false_suite
+
+- if-elif-else语句：
+```{python eval=FALSE}
+if expression1:
+    expr1_true_suite
+elif expression2:
+    expr2_true_suite
+    .
+    .
+elif expressionN:
+    exprN_true_suite
+else:
+    expr_false_suite
+```
+
+进行多重判断
+```{python}
+
+source = 99
+if 100 >= source >= 90:
+    print('A')
+elif 90 > source >= 80:
+    print('B')
+elif 80 > source >= 60:
+    print('C')
+elif 60 > source >= 0:
+    print('D')
+else:
+    print('输入错误！')
+```
+
+- assert 断言关键词
+
+当assert后面的语句为False时，会抛出`AssertionError`异常：
+
+```{python eval=FALSE}
+assert 3 > 6
+##AssertionError
+```
+
+## 循环语句
+
+
+## 异常处理
+
