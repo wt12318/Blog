@@ -8,4 +8,6 @@ lastmod = "2020-10-09"
 +++
 
 
-Github ： https://github.com/wt12318
+Github ： https://github.com/wt12318    
+E-mail ： 1650464505@qq.com/wutao12318@gmail.com    
+Bilibili :  wt12318
