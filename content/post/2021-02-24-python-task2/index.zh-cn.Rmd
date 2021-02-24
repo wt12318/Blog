@@ -1,0 +1,63 @@
+---
+title: 天池python---Task2
+author: wutao
+date: '2021-02-24'
+slug: python_task2
+categories:
+  - python
+tags:
+  - python
+  - notes
+image : "python.jpg"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE,comment=">>",
+                      engine.path = list(python = 'C:\\Users\\16504\\AppData\\Local\\Programs\\Python\\Python38\\python.exe'))
+```
+
+
+Task2 主要包含python主要数据结构：
+
+- 列表
+- 元组
+- 字符串
+- 字典
+- 集合
+
+## 列表
+
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/列表 - 坚果云_00.png)
+
+### 创建列表
+
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210224222711937.png)
+
+- 直接创建
+
+```{python}
+x = [1,2,3]
+
+print(x,type(x))
+```
+
+- 使用`range`函数创建
+
+```{python}
+x = list(range(10))##默认是stop，从0开始
+print(x,type(x))
+
+x = list(range(1,11,2))
+print(x,type(x))
+
+x = list(range(10,1,-2))
+print(x,type(x))
+```
+
+- 利用推导式创建列表
+
+```{python}
+x = [0]
+```
+
+
