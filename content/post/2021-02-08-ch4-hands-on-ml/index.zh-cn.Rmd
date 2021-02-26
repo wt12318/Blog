@@ -1,7 +1,7 @@
 ---
 title: 【Ch4】Hands on Machine Learning
 author: wutao
-date: '2021-02-08'
+date: '2021-02-25'
 slug: ch4_hands_on_ml
 categories:
   - reading notes
@@ -12,9 +12,110 @@ tags:
 image : "image1.jpg"
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE,eval=FALSE}
 knitr::opts_chunk$set(collapse = TRUE,comment=">>",
                       engine.path = list(python = 'C:\\Users\\16504\\AppData\\Local\\Programs\\Python\\Python38\\python.exe'))
 ```
+
+```{r setup2, include=FALSE,eval=TRUE}
+knitr::opts_chunk$set(collapse = TRUE,comment=">>",
+                      engine.path = list(python = 'C:\\Users\\lenovo\\AppData\\Local\\Programs\\Python\\Python39\\python.exe'))
+```
+
+
+本章主要包括：
+
+- 线性回归模型
+- 多项式回归模型
+- 逻辑回归模型
+- Softmax回归模型
+- 一些正则化的技术
+- 梯度下降
+
+## 线性回归
+
+一般线性回归的表示行形式为：输入特征的加权求和再加上截距项(或者叫做bias term)
+
+$$
+\hat y = \theta_0 + \theta_1x_1+\theta_2x_2+...+\theta_nx_n
+$$
+($\hat y$是预测值，n是特征数量，$x_i$是特征值，$\theta_j$是模型参数 )
+
+也可以写成向量形式：
+
+$$
+\hat y = h_{\theta}(x)=\theta^TX 
+$$
+($\theta$是参数向量，X是输入特征向量)
+
+在第二章中已经讲过衡量一个线性回归模型常用的指标是RMSE，因此我们可以通过最小化RMSE来找到参数$\theta$,为了简化计算，在实际操作中我们是最小化MSE的(MSE最小化，平方根自然也就是最小的)：
+
+$$
+MSE(X,h_{\theta})=\frac{1}{m}\sum_{i=1}^{m}(\theta^TX^{(i)}-y^{(i)})^2
+$$
+求使损失函数最小的$\theta$最直接的方法就是进行数学求解(解析解，也叫normal equation)，MSE的Normal Equation为：
+
+$$
+\hat \theta = (X^TX)^{-1}X^Ty
+$$
+我们可以来验证一下：
+
+```{python}
+##生成数据
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+x = 2 * np.random.rand(100,1)
+y = 4 + 3 * x + np.random.randn(100,1)
+plt.plot(x, y, "b.")
+plt.xlabel("$x_1$", fontsize=18)
+plt.ylabel("$y$", rotation=0, fontsize=18)
+plt.axis([0, 2, 0, 15])
+plt.show()
+```
+
+计算$\theta$的Normal equation:
+
+```{python}
+x_b = np.c_[np.ones((100,1)),x]##x_0 = 1
+theta_best = np.linalg.inv(x_b.T.dot(x_b)).dot(x_b.T).dot(y)
+
+theta_best
+```
+
+`np.c_`进行的是增加列的操作(R里面的cbind);`np.ones((100,1))`产生100行1列的矩阵，元素都是1;`np.linalg`是numpy中线性代数模块;`inv`是矩阵求逆方法;`T`是矩阵转置方法;`dot`是矩阵乘法
+
+现在我们使用计算出的$\hat \theta$来预测：
+
+```{python}
+x_new = np.array([[0],[2]])
+x_new_b = np.c_[np.ones((2,1)),x_new]
+y_pre = x_new_b.dot(theta_best)
+y_pre
+```
+
+```{python}
+plt.plot(x_new,y_pre,"r-")
+plt.plot(x,y,"b.")
+plt.axis([0,2,0,15])
+plt.show()
+```
+
+在Scikit-Learn中可以使用`LinearRegression`来方便的进行线性回归的计算：
+
+```{python}
+from sklearn.linear_model import LinearRegression
+
+lin_reg = LinearRegression()
+lin_reg.fit(x,y)
+lin_reg.intercept_, lin_reg.coef_
+
+lin_reg.predict(x_new)
+```
+
+`LinearRegression`类是基于`scipy.linalg.lstsq`函数的，该函数是通过SVD进行计算pseudoinverse($X^+$)然后再计算$\hat \theta = X^+y$,这样计算有两个好处：pseudoinverse的计算比直接计算矩阵的逆效率更高(why?)；当$X^TX$不可逆的时候Normal Equation是无法计算的，而pseudoinverse是可以计算的
+
+计算Normal Equation的计算复杂度是比较大的(求矩阵的逆的计算复杂度为$O(n^{2.4})$~$O(n^{3})$,使用SVD方法的计算复杂度为$O(n^2)$)
 
 

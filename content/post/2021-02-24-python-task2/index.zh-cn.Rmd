@@ -57,7 +57,78 @@ print(x,type(x))
 - 利用推导式创建列表
 
 ```{python}
-x = [0]
+x = [0] * 5 
+a = [x] * 4
+b = x * 4
+print(a,type(a))
+print(b,type(b))
+
+a[0][0] = 1
+print(a)
 ```
 
+```{python}
+x = [i ** 2 for i in range(10,1,-2)]
+print(x,type(x))
+```
+### 添加和删除元素
 
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210225211530039.png)
+
+#### 添加元素
+`append`在列表末尾添加元素(作为一个整体添加)：
+
+```{python}
+x = ["a","b","c"]
+x.append("d")
+print(x)
+```
+`extend`也是在列表末尾添加元素(添加的是元素的元素)，注意区分两者：
+
+```{python}
+x.append([1,2,3])
+print(x)
+
+x.extend([1,2,3])
+print(x)
+```
+`insert`在指定位置插入元素：
+
+```{python}
+x.insert(2,"f")##在第三个位置插入f
+print(x)
+```
+#### 删除元素
+
+根据元素的位置删除元素可以使用`pop`,`del`；`pop`方法移除指定位置的元素并且返回该元素(”弹出“)：
+
+```{python}
+x.pop()
+
+x.pop(1)
+
+del x[0:2]
+```
+
+根据元素的值删除元素可以使用`remove`方法
+
+```{python}
+x.remove(1)
+print(x)
+```
+
+### 获取列表元素
+
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210225212857353.png)
+
+切片的操作为[start,stop,step],注意是左闭右开：
+
+```{python}
+print(x)
+
+x[1::2]
+x[:4:1]
+x[::-1]
+```
+
+**浅拷贝与深拷贝**

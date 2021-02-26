@@ -1,0 +1,85 @@
+---
+title: 基因组坐标转化
+author: wutao
+date: '2021-02-26'
+slug: liftover_genome_version
+categories:
+  - R
+  - skills
+tags:
+  - bioinformatics
+image : "liftover.png"
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>现在有GRCh37的基因组坐标文件(TCGA的突变记录)，要将其转换成GRCh38的坐标：</p>
+<pre class="r"><code>library(dplyr)
+&gt;&gt; Warning: 程辑包&#39;dplyr&#39;是用R版本3.6.3 来建造的
+&gt;&gt; 
+&gt;&gt; 载入程辑包：&#39;dplyr&#39;
+&gt;&gt; The following objects are masked from &#39;package:stats&#39;:
+&gt;&gt; 
+&gt;&gt;     filter, lag
+&gt;&gt; The following objects are masked from &#39;package:base&#39;:
+&gt;&gt; 
+&gt;&gt;     intersect, setdiff, setequal, union
+
+dt &lt;- readRDS(&quot;../test/dt.rds&quot;) %&gt;% 
+  as.data.frame()
+
+head(dplyr::as_tibble(dt))
+&gt;&gt; # A tibble: 6 x 8
+&gt;&gt;   Hugo_Symbol Chromosome Start_position End_position sample Protein_Change
+&gt;&gt;   &lt;chr&gt;            &lt;int&gt;          &lt;int&gt;        &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;         
+&gt;&gt; 1 SH3PXD2A            10      105614934    105614934 TCGA-~ .             
+&gt;&gt; 2 INPP5F              10      121556913    121556913 TCGA-~ .             
+&gt;&gt; 3 ITIH2               10        7772149      7772149 TCGA-~ .             
+&gt;&gt; 4 OPN4                10       88419681     88419681 TCGA-~ p.G288D       
+&gt;&gt; 5 TRIM49B             11       49053482     49053482 TCGA-~ p.L111F       
+&gt;&gt; 6 DNAJC4              11       64001585     64001585 TCGA-~ p.G219W       
+&gt;&gt; # ... with 2 more variables: Variant_Classification &lt;chr&gt;, Variant_Type &lt;chr&gt;</code></pre>
+<p>转换的方法有多种，可以参考<a href="https://www.biostars.org/p/65558/">Converting Genome Coordinates From One Genome Version To Another</a>,这里使用R包<code>rtracklayer</code>来转换</p>
+<p>安装包：</p>
+<pre class="r"><code>if(!(&quot;rtracklayer&quot; %in% installed.packages())){
+  BiocManager::install(&quot;rtracklayer&quot;)
+}
+
+library(rtracklayer)</code></pre>
+<p>我们需要使用的是这个包中的<code>liftOver</code>函数：</p>
+<pre class="r"><code>?liftOver</code></pre>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210226171357422.png" /></p>
+<p>该函数需要两个输入：需要转换的基因组区间(<strong>GRanges对象</strong>)；chain文件</p>
+<p>首先将数据框转化为GRanges对象(需要使用GenomicRanges包，在library(rtracklayer)中已经载入了)：</p>
+<pre class="r"><code>dt$Chromosome &lt;- paste0(&quot;chr&quot;,dt$Chromosome)
+
+dt_granges &lt;- makeGRangesFromDataFrame(dt,
+                         keep.extra.columns=TRUE,
+                         ignore.strand=TRUE,
+                         seqinfo=NULL,
+                         seqnames.field=&quot;Chromosome&quot;,##染色体所在列的名称
+                         start.field=&quot;Start_position&quot;,##起始位点所在列的名称
+                         end.field=&quot;End_position&quot;,##终止位点所在列的名称
+                         starts.in.df.are.0based=FALSE)##是否是0based的</code></pre>
+<p>这里面需要注意的是：需要转换的基因组坐标起始位点是0based还是1based；对于TCGA的<a href="https://docs.gdc.cancer.gov/Encyclopedia/pages/Mutation_Annotation_Format_TCGAv2/">maf文件</a>是0-based的，所以这里选FALSE：</p>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210226172456415.png" />
+需要的第二个文件是Chain文件，需要在<a href="https://hgdownload.soe.ucsc.edu/downloads.html">UCSC</a>网站上下载：</p>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210226225522742.png" /></p>
+<p>使用<code>import.chain</code>函数导入Chain文件，进行转换：</p>
+<pre class="r"><code>chainObject &lt;- import.chain(&quot;../test/hg19ToHg38.over.chain&quot;)
+
+results &lt;- as.data.frame(liftOver(dt_granges, chainObject))
+
+head(dplyr::as_tibble(results))
+&gt;&gt; # A tibble: 6 x 12
+&gt;&gt;   group group_name seqnames  start    end width strand Hugo_Symbol sample
+&gt;&gt;   &lt;int&gt; &lt;chr&gt;      &lt;fct&gt;     &lt;int&gt;  &lt;int&gt; &lt;int&gt; &lt;fct&gt;  &lt;chr&gt;       &lt;chr&gt; 
+&gt;&gt; 1     1 &lt;NA&gt;       chr10    1.04e8 1.04e8     1 *      SH3PXD2A    TCGA-~
+&gt;&gt; 2     2 &lt;NA&gt;       chr10    1.20e8 1.20e8     1 *      INPP5F      TCGA-~
+&gt;&gt; 3     3 &lt;NA&gt;       chr10    7.73e6 7.73e6     1 *      ITIH2       TCGA-~
+&gt;&gt; 4     4 &lt;NA&gt;       chr10    8.67e7 8.67e7     1 *      OPN4        TCGA-~
+&gt;&gt; 5     5 &lt;NA&gt;       chr11    4.90e7 4.90e7     1 *      TRIM49B     TCGA-~
+&gt;&gt; 6     6 &lt;NA&gt;       chr11    6.42e7 6.42e7     1 *      DNAJC4      TCGA-~
+&gt;&gt; # ... with 3 more variables: Protein_Change &lt;chr&gt;,
+&gt;&gt; #   Variant_Classification &lt;chr&gt;, Variant_Type &lt;chr&gt;</code></pre>

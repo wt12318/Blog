@@ -50,6 +50,68 @@ print(x,type(x))
 <ul>
 <li>利用推导式创建列表</li>
 </ul>
-<pre class="python"><code>x = [0]</code></pre>
+<pre class="python"><code>x = [0] * 5 
+a = [x] * 4
+b = x * 4
+print(a,type(a))
+&gt;&gt; [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]] &lt;class &#39;list&#39;&gt;
+print(b,type(b))
+&gt;&gt; [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] &lt;class &#39;list&#39;&gt;
+a[0][0] = 1
+print(a)
+&gt;&gt; [[1, 0, 0, 0, 0], [1, 0, 0, 0, 0], [1, 0, 0, 0, 0], [1, 0, 0, 0, 0]]</code></pre>
+<pre class="python"><code>x = [i ** 2 for i in range(10,1,-2)]
+print(x,type(x))
+&gt;&gt; [100, 64, 36, 16, 4] &lt;class &#39;list&#39;&gt;</code></pre>
+</div>
+<div id="添加和删除元素" class="section level3">
+<h3>添加和删除元素</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210225211530039.png" /></p>
+<div id="添加元素" class="section level4">
+<h4>添加元素</h4>
+<p><code>append</code>在列表末尾添加元素(作为一个整体添加)：</p>
+<pre class="python"><code>x = [&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]
+x.append(&quot;d&quot;)
+print(x)
+&gt;&gt; [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;]</code></pre>
+<p><code>extend</code>也是在列表末尾添加元素(添加的是元素的元素)，注意区分两者：</p>
+<pre class="python"><code>x.append([1,2,3])
+print(x)
+&gt;&gt; [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;, [1, 2, 3]]
+x.extend([1,2,3])
+print(x)
+&gt;&gt; [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;, [1, 2, 3], 1, 2, 3]</code></pre>
+<p><code>insert</code>在指定位置插入元素：</p>
+<pre class="python"><code>x.insert(2,&quot;f&quot;)##在第三个位置插入f
+print(x)
+&gt;&gt; [&#39;a&#39;, &#39;b&#39;, &#39;f&#39;, &#39;c&#39;, &#39;d&#39;, [1, 2, 3], 1, 2, 3]</code></pre>
+</div>
+<div id="删除元素" class="section level4">
+<h4>删除元素</h4>
+<p>根据元素的位置删除元素可以使用<code>pop</code>,<code>del</code>；<code>pop</code>方法移除指定位置的元素并且返回该元素(”弹出“)：</p>
+<pre class="python"><code>x.pop()
+&gt;&gt; 3
+x.pop(1)
+&gt;&gt; &#39;b&#39;
+del x[0:2]</code></pre>
+<p>根据元素的值删除元素可以使用<code>remove</code>方法</p>
+<pre class="python"><code>x.remove(1)
+print(x)
+&gt;&gt; [&#39;c&#39;, &#39;d&#39;, [1, 2, 3], 2]</code></pre>
+</div>
+</div>
+<div id="获取列表元素" class="section level3">
+<h3>获取列表元素</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210225212857353.png" /></p>
+<p>切片的操作为[start,stop,step],注意是左闭右开：</p>
+<pre class="python"><code>print(x)
+&gt;&gt; [&#39;c&#39;, &#39;d&#39;, [1, 2, 3], 2]
+x[1::2]
+&gt;&gt; [&#39;d&#39;, 2]
+x[:4:1]
+&gt;&gt; [&#39;c&#39;, &#39;d&#39;, [1, 2, 3], 2]
+x[::-1]
+&gt;&gt; [2, [1, 2, 3], &#39;d&#39;, &#39;c&#39;]</code></pre>
+<p><strong>浅拷贝与深拷贝</strong></p>
 </div>
 </div>
