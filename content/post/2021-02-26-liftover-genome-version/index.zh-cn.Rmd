@@ -8,7 +8,7 @@ categories:
   - skills
 tags:
   - bioinformatics
-image : "liftover.png"
+image : "liftover1.png"
 ---
 
 ```{r setup, include=FALSE,eval=TRUE}
