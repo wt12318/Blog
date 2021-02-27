@@ -63,7 +63,7 @@ dt_granges <- makeGRangesFromDataFrame(dt,
                          starts.in.df.are.0based=FALSE)##是否是0based的
 ```
 
-这里面需要注意的是：需要转换的基因组坐标起始位点是0based还是1based；对于TCGA的[maf文件](https://docs.gdc.cancer.gov/Encyclopedia/pages/Mutation_Annotation_Format_TCGAv2/)是0-based的，所以这里选FALSE：
+这里面需要注意的是：需要转换的基因组坐标起始位点是0based还是1based；对于TCGA的[maf文件](https://docs.gdc.cancer.gov/Encyclopedia/pages/Mutation_Annotation_Format_TCGAv2/)是1-based的，所以这里选FALSE：
 
 ![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210226172456415.png)
 需要的第二个文件是Chain文件，需要在[UCSC](https://hgdownload.soe.ucsc.edu/downloads.html)网站上下载：
