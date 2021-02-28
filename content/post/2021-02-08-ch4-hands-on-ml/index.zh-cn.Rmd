@@ -209,6 +209,7 @@ sgd_reg.fit(x,y.ravel())##ravel将列向量转为一维向量
 ```{python}
 ##模拟数据
 m = 100
+np.random.seed(123)
 x = 6 * np.random.rand(m,1) - 3 ##均匀分布
 y = 0.5 * x**2 + x + 2 + np.random.randn(m,1)##正态分布
 
@@ -253,6 +254,114 @@ plt.axis([-3, 3, 0, 10])
 plt.show()
 ```
 
-需要注意的是：`PolynomialFeatures(degree=d)`会将原来的n个特征变成$\frac{(n+d)!}{d!n!}$个特征；比如有两个特征a,b,经过自由度为3的PolynomialFeatures转化后就有10个特征(包括1)
+需要注意的是：`PolynomialFeatures(degree=d)`会将原来的n个特征变成$\frac{(n+d)!}{d!n!}$个特征；比如有两个特征a,b,经过自由度为3的PolynomialFeatures转化后就有10个特征(包括1),要注意特征爆炸的问题
 
 ## 学习曲线
+
+使用高自由度的多项式回归模型可能会在训练集上过拟合，然而简单的线性模型可能是欠拟合的，那么我们该怎样决定模型的复杂程度或者说判断模型是过拟合还是欠拟合呢？
+
+在第二章中，使用了交叉验证的方法来估计模型的泛化能力；如果一个模型在训练集上表现的比较好但是依据交叉验证的指标，其泛化能力比较差(在验证集上表现不好)，那么这个模型就是过拟合；如果一个模型在训练集和验证集上表现都不好，那么这个模型是欠拟合的
+
+另外一个方法就是检查**学习曲线**(learning curves),**学习曲线展示了模型在训练集和验证集上的表现和训练集大小或者训练的迭代次数之间的关系**;要画这个图，需要在不同大小的训练集的子集上训练模型，得到模型的表现指标
+
+我们先来画一个简单线性回归的学习曲线：
+
+```{python}
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+
+def plot_learning_curves(model,x,y):
+  x_train,x_val,y_train,y_val = train_test_split(x,y,test_size=0.2)
+  train_errors,val_errors = [],[]
+  for m in range(1,len(x_train)):
+    model.fit(x_train[:m],y_train[:m])
+    y_train_predict = model.predict(x_train[:m])
+    y_val_predict = model.predict(x_val)
+    train_errors.append(mean_squared_error(y_train[:m],y_train_predict))
+    val_errors.append(mean_squared_error(y_val,y_val_predict))
+  
+  plt.plot(np.sqrt(train_errors),"r-+",linewidth=2,label="train")
+  plt.plot(np.sqrt(val_errors), "b-", linewidth=3, label="val")
+  plt.legend(loc="upper right", fontsize=14)  
+  plt.xlabel("Training set size", fontsize=14)
+  plt.ylabel("RMSE", fontsize=14) 
+    
+    
+lin_reg = LinearRegression()
+plot_learning_curves(lin_reg,x,y)
+plt.axis([0, 80, 0, 3]) 
+plt.show()        
+```
+
+当只有一两个训练数据的时候，模型拟合的非常好，同时由于训练集较少，泛化能力较弱所以在验证集中表现不好；当训练集逐渐增大，一方面由于数据的噪音，另一方面因为模型是线性的，而数据不是线性的，所以模型在训练集上的误差上升，但是由于训练集增多，泛化能力会一定程度的上升，所以在验证集上的误差降低，最终两者都到达一个平台
+
+这个学习曲线是一个典型的欠拟合的模型的特征：**两个曲线都到达一个平台；并且两者比较接近，都比较高**
+
+接下来看一下有10个自由度的多项式回归模型的学习曲线：
+
+```{python}
+from sklearn.pipeline import Pipeline
+
+polynomial_regression = Pipeline([
+        ("poly_features", PolynomialFeatures(degree=20, include_bias=False)),
+        ("lin_reg", LinearRegression()),
+    ])
+
+plot_learning_curves(polynomial_regression, x, y)
+plt.axis([0, 80, 0, 3])
+plt.show()           
+```
+
+这个学习曲线也有两个特征：
+
+- 在训练集上的误差比上面的线性回归模型要低
+- 在两个曲线间有一个gap，这意味着模型在训练集上比在验证集上的表现要好得多，而这是**过拟合**的特征(可能需要收集更多的数据)
+
+## BIAS/VARIANCE TRADE-OFF
+
+## 正则化线性模型
+
+在第一章和第二章已经讲过了减少过拟合风险的方法之一就是正则化模型(也就是约束模型)；对于多项式模型最简单的正则化方法就是减少模型的自由度；对于线性模型，正则化一般是通过约束模型的权重来实现，常用的有3种方法：岭回归(Ridge Regression),Lasso回归,弹性网络(Elastic Net)
+
+### 岭回归
+
+岭回归就是在线性回归的损失函数后面加上了一个正则化的项:
+
+$$
+J(\theta) = MSE(\theta) + \alpha \frac{1}{2}\sum_{i=1}^{n}\theta_i^2
+$$
+加上这一项之后就会使得模型在训练的过程中尽量保持特征权重($\theta$)比较小                
+注意：在岭回归等正则化的模型中，训练时使用的损失函数与计算模型性能时用的指标不一定相同(在分类模型中更是如此)；另外在训练正则化的模型时，对特征一定要归一化
+
+对于岭回归，和线性回归一样，可以使用normal equation的方法或者梯度下降的方法求解：
+
+```{python}
+##Normal equation
+from sklearn.linear_model import Ridge
+
+ridge_reg = Ridge(alpha=1,solver="cholesky")
+ridge_reg.fit(x,y)
+ridge_reg.predict([[1.5]])
+```
+
+```{python}
+##梯度下降
+sgd_reg = SGDRegressor(penalty="l2")
+sgd_reg.fit(x,y.ravel())
+sgd_reg.predict([[1.5]])
+```
+
+"l2"指的是L2范数(norm);$L_p$范数的定义为：
+$$
+||x||_p = \sqrt[p]{\sum_i |x_i|^p}
+$$
+因此L2范数为：
+$$
+||x||_2 = \sqrt[2]{\sum_i |x_i|^2}
+$$
+
+所以岭回归的正则化项就是$\alpha 1/2(||w||_2)^2$,w是$\theta_1$到$\theta_n$的参数向量(特征权重)
+
+### Lasso回归
+
+
