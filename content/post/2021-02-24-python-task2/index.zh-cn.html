@@ -113,5 +113,540 @@ x[:4:1]
 x[::-1]
 &gt;&gt; [2, [1, 2, 3], &#39;d&#39;, &#39;c&#39;]</code></pre>
 <p><strong>浅拷贝与深拷贝</strong></p>
+<p>对于不可变数据类型，深浅拷贝是一样的(内存地址不变)；对于可变数据类型，浅拷贝只拷贝最外层的可变数据结构(内存地址发生改变)，而深拷贝则拷贝每层的可变数据类型，<a href="https://mp.weixin.qq.com/s/e8N-s2w4gYQPKETVH62EAg">参考</a></p>
+<pre class="python"><code>a = [1,2]
+b = 1
+x = [a,2,3]
+y = [b,2]
+
+z = x[:] ##浅拷贝
+k = y[:] ##浅拷贝
+
+import copy
+z_d = copy.deepcopy(x) ##深拷贝
+k_d = copy.deepcopy(y) ##深拷贝
+
+##可变数据类型
+print(id(x),id(z))##不一样
+&gt;&gt; 1207068928 1116037504
+print(id(x[0]),id(z[0]))##一样
+&gt;&gt; 1207079872 1207079872
+print(id(x),id(z_d))##不一样
+&gt;&gt; 1207068928 1207158464
+print(id(x[0]),id(z_d[0])) ##不一样
+
+##不可变数据类型
+&gt;&gt; 1207079872 1207158528
+print(id(y),id(k))##不一样
+&gt;&gt; 1207085568 1207085440
+print(id(y[0]),id(k[0]))##一样
+&gt;&gt; 564029744 564029744
+print(id(y),id(k_d)) ##不一样
+&gt;&gt; 1207085568 1207158592
+print(id(y[0]),id(k_d[0])) ##一样
+&gt;&gt; 564029744 564029744</code></pre>
+</div>
+<div id="常用操作符" class="section level3">
+<h3>常用操作符</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228094615853.png" /></p>
+<pre class="python"><code>l1 = [1,2,3]
+l2 = [4,5,6]
+l3 = [2,1,3]
+
+print(l1 == l2)
+&gt;&gt; False
+print(l1 == l3)
+&gt;&gt; False
+print(l1 + l2)
+&gt;&gt; [1, 2, 3, 4, 5, 6]
+print(l1 * 3)
+&gt;&gt; [1, 2, 3, 1, 2, 3, 1, 2, 3]
+print(1 in l1)
+&gt;&gt; True
+print(0 not in l1)
+&gt;&gt; True</code></pre>
+</div>
+<div id="其他方法" class="section level3">
+<h3>其他方法</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228095235247.png" /></p>
+<pre class="python"><code>l1.count(1)
+&gt;&gt; 1
+l4 = l1 * 3
+print(l4)
+&gt;&gt; [1, 2, 3, 1, 2, 3, 1, 2, 3]
+print(l4.index(1))
+&gt;&gt; 0
+print(l4.index(1,2))##从第三个元素开始找
+&gt;&gt; 3
+print(l4.index(1,1,3)) ##在第二到第四个元素范围内找(左闭右开), 但是里面没有，报错
+&gt;&gt; Error in py_call_impl(callable, dots$args, dots$keywords): ValueError: 1 is not in list
+&gt;&gt; 
+&gt;&gt; Detailed traceback: 
+&gt;&gt;   File &quot;&lt;string&gt;&quot;, line 1, in &lt;module&gt;
+l4.reverse()
+print(l4)
+&gt;&gt; [3, 2, 1, 3, 2, 1, 3, 2, 1]
+l4.sort()
+print(l4)
+&gt;&gt; [1, 1, 1, 2, 2, 2, 3, 3, 3]
+l4 = l1 * 3
+sorted(l4)
+&gt;&gt; [1, 1, 1, 2, 2, 2, 3, 3, 3]
+print(l4)
+&gt;&gt; [1, 2, 3, 1, 2, 3, 1, 2, 3]</code></pre>
+</div>
+</div>
+<div id="元组" class="section level2">
+<h2>元组</h2>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/元组%20-%20坚果云_00.png" /></p>
+<p>元组和列表类似，不同的是元组是不可变数据类型(但是可以嵌套可变数据类型，可以直接更改其元素)</p>
+<pre class="python"><code>t1 = (1,2,[1,2,3])
+t1[0] = 2
+&gt;&gt; Error in py_call_impl(callable, dots$args, dots$keywords): TypeError: &#39;tuple&#39; object does not support item assignment
+&gt;&gt; 
+&gt;&gt; Detailed traceback: 
+&gt;&gt;   File &quot;&lt;string&gt;&quot;, line 1, in &lt;module&gt;
+t1[2][0] = 0
+print(t1)
+&gt;&gt; (1, 2, [0, 2, 3])</code></pre>
+<p>元组相关的操作符和方法也和列表类似：</p>
+<pre class="python"><code>t1 = (1,2,3)
+t2 = (4,5,6)
+
+t1 == t2
+&gt;&gt; False
+print(t1 + t2)
+&gt;&gt; (1, 2, 3, 4, 5, 6)
+print(t1 * 3)
+&gt;&gt; (1, 2, 3, 1, 2, 3, 1, 2, 3)
+print(1 in t1)
+&gt;&gt; True
+print(0 not in t1)
+&gt;&gt; True
+print(t1.count(1))
+&gt;&gt; 1
+print(t1.index(1))
+&gt;&gt; 0</code></pre>
+<div id="元组拆包" class="section level3">
+<h3>元组拆包</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228103946589.png" /></p>
+<p>元组拆包(解压)就是将元组拆成单个的元素(结构要和原来的元组相同)</p>
+<pre class="python"><code>t = (1,2,3,(&quot;a&quot;,&quot;b&quot;,[&quot;j&quot;,9]))
+
+(a,b,c,(d,e,f)) = t
+print(a,b,c,d,e,f,end=&quot;\n&quot;)
+&gt;&gt; 1 2 3 a b [&#39;j&#39;, 9]
+(a,b,c,(d,e,[f,g])) = t
+print(a,b,c,d,e,f,g,end=&quot;\n&quot;)
+&gt;&gt; 1 2 3 a b j 9</code></pre>
+<p>如果我们只想要其中几个元素，可以将其他元素赋给<code>*rest</code>(通配符)或者<code>*_</code>：</p>
+<pre class="python"><code>(a,*rest,(b,c,[d,e])) = t
+print(a,b,c,d,e,end=&quot;\n&quot;)
+&gt;&gt; 1 a b j 9
+print(*rest)
+&gt;&gt; 2 3
+(a,*_,(b,c,[d,e])) = t</code></pre>
+</div>
+</div>
+<div id="字符串" class="section level2">
+<h2>字符串</h2>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228105301884.png" /></p>
+<p>如果字符串中出现了一些有特殊含义的字符需要使用<code>\</code>对其进行转义，也可以在字符串前面加上<code>r</code>来表示原始字符串：</p>
+<pre class="python"><code>print(&quot;a \n b&quot;)
+&gt;&gt; a 
+&gt;&gt;  b
+print(r&quot;a \n b&quot;)
+&gt;&gt; a \n b</code></pre>
+<p>字符串的切片和拼接和列表，元组类似：</p>
+<pre class="python"><code>s1 = &quot;abcdef&quot;
+
+s1[0:4:2]
+&gt;&gt; &#39;ac&#39;
+print(s1 + &quot;abc&quot;)
+&gt;&gt; abcdefabc
+print(s1 * 3)
+&gt;&gt; abcdefabcdefabcdef</code></pre>
+<div id="常用内置方法" class="section level3">
+<h3>常用内置方法</h3>
+<ul>
+<li>大小写的转换：<code>capitalize</code>将字符串的第一个字符转换成大写；<code>lower</code>将所有字符转换为小写；<code>upper</code>将所有字符转换成大写；<code>swapcase</code>将大写字符转换成小写，将小写字符转换成大写；<code>title</code>将所有单词的首字母转换成大写</li>
+</ul>
+<pre class="python"><code>s2 = &quot;An apple&quot;
+
+s2.lower()
+&gt;&gt; &#39;an apple&#39;
+s2.upper()
+&gt;&gt; &#39;AN APPLE&#39;
+s2.swapcase()
+&gt;&gt; &#39;aN APPLE&#39;
+s2.title()
+&gt;&gt; &#39;An Apple&#39;
+s2.lower().capitalize()
+&gt;&gt; &#39;An apple&#39;</code></pre>
+<ul>
+<li><code>count(str, beg= 0,end=len(string))</code>返回<code>str</code>在字符串中出现的次数，可以使用<code>beg</code>和<code>end</code>参数指定范围,<strong>大小写敏感</strong></li>
+</ul>
+<pre class="python"><code>s2.count(&quot;A&quot;)
+&gt;&gt; 1
+s2.count(&quot;A&quot;,1,5)
+&gt;&gt; 0</code></pre>
+<ul>
+<li>检查子字符串：<code>endswith(str, beg=0,end=len(string))</code>检查字符串是否以<code>str</code>结束；<code>startswith(substr, beg=0,end=len(string))</code>检查字符串是否以<code>str</code>开头；<code>find(str, beg=0, end=len(string))</code>检查<code>str</code>是否在字符串中，如果在，返回第一个值的索引，如果不在，返回-1；<code>rfind(str, beg=0,end=len(string))</code>类似<code>find</code>,不过是从右边开始查找</li>
+</ul>
+<pre class="python"><code>s3 = &quot;this is a string&quot;
+
+s3.endswith(&quot;str&quot;)
+&gt;&gt; False
+s3.endswith(&quot;ing&quot;)
+&gt;&gt; True
+s3.startswith(&quot;this&quot;)
+&gt;&gt; True
+s3.find(&quot;str&quot;)
+&gt;&gt; 10
+s3.find(&quot;stre&quot;)
+&gt;&gt; -1
+s3.rfind(&quot;str&quot;)
+&gt;&gt; 10
+s3.find(&quot;is&quot;)
+&gt;&gt; 2
+s3.rfind(&quot;is&quot;)##从右边
+&gt;&gt; 5</code></pre>
+<ul>
+<li><code>isnumeric</code>检查字符串是不是只包含数字字符</li>
+</ul>
+<pre class="python"><code>s4 = &quot;123&quot;
+s4.isnumeric()
+&gt;&gt; True
+s4 = s4 + &quot;a&quot;
+s4.isnumeric()
+&gt;&gt; False</code></pre>
+<ul>
+<li>对齐并填充：<code>ljust(width,fillchar)</code> 将字符串左对齐,并使用fillchar填充到指定的宽度(width)；与之对应的是<code>rjust(width,fillchar)</code>右对齐</li>
+</ul>
+<pre class="python"><code>s4.ljust(8,&quot;*&quot;)
+&gt;&gt; &#39;123a****&#39;
+s4.rjust(8,&quot;*&quot;)
+&gt;&gt; &#39;****123a&#39;</code></pre>
+<ul>
+<li>截断字符串：<code>lstrip(char)</code>去掉字符串左边空格(默认)或者指定字符(char);与之对应的是<code>rstrip</code>(右边)和<code>strip</code>(左边加右边)</li>
+</ul>
+<pre class="python"><code>s4 = &quot;  &quot; + s4 + &quot;123  &quot;
+s4
+&gt;&gt; &#39;  123a123  &#39;
+s4.lstrip()
+&gt;&gt; &#39;123a123  &#39;
+s4.rstrip()
+&gt;&gt; &#39;  123a123&#39;
+s4.strip()
+&gt;&gt; &#39;123a123&#39;
+s4 = s4.strip()
+
+s4.strip(&quot;123&quot;)
+&gt;&gt; &#39;a&#39;</code></pre>
+<ul>
+<li>字符串切割：<code>partition(sub)</code>在字符串中找sub字符串，找到之后将原字符串以子字符串分成3部分，如果找不到返回原字符串加上<code>,</code>;<code>rpartition(sub)</code>和<code>partition</code>类似，不过是从右边开始寻找，<strong>注意：这里的寻找只找第一个，所以两者的结果可能不同</strong>; <code>split(str=" ",num)</code>以str为分隔符切割字符串，可以指定分割产生的子字符串的个数，返回子字符串构成的列表</li>
+</ul>
+<pre class="python"><code>s5 = &#39;abc123abc&#39;
+print(s5.partition(&#39;b&#39;))
+&gt;&gt; (&#39;a&#39;, &#39;b&#39;, &#39;c123abc&#39;)
+print(s5.rpartition(&#39;b&#39;))
+&gt;&gt; (&#39;abc123a&#39;, &#39;b&#39;, &#39;c&#39;)</code></pre>
+<pre class="python"><code>s5.split(&quot;b&quot;)##分隔符是b
+&gt;&gt; [&#39;a&#39;, &#39;c123a&#39;, &#39;c&#39;]
+s5.split(&quot;b&quot;,1)#num指定的是&quot;切割&quot;的次数
+&gt;&gt; [&#39;a&#39;, &#39;c123abc&#39;]</code></pre>
+<ul>
+<li><code>replace(old,new,max)</code>将字符串中old子字符串替换成new新字符串，可以通过max指定替换的最大次数</li>
+</ul>
+<pre class="python"><code>s5.replace(&quot;bc&quot;,&quot;**&quot;,1)
+&gt;&gt; &#39;a**123abc&#39;
+s5.replace(&quot;bc&quot;,&quot;**&quot;)
+&gt;&gt; &#39;a**123a**&#39;</code></pre>
+<ul>
+<li><code>splitlines(keepends)</code> 按行分割字符串，返回各行构成的列表(分割符可以为’, ‘’, ’)；可以通过keepends来指定是否保留分隔符</li>
+</ul>
+<pre class="python"><code>s6 = &quot;abc\n123\rbcd\r\n000&quot;
+print(s6)
+&gt;&gt; abc
+&gt;&gt; 123
+bcd
+&gt;&gt; 000
+s6.splitlines()
+&gt;&gt; [&#39;abc&#39;, &#39;123&#39;, &#39;bcd&#39;, &#39;000&#39;]
+s6.splitlines(keepends=True)
+&gt;&gt; [&#39;abc\n&#39;, &#39;123\r&#39;, &#39;bcd\r\n&#39;, &#39;000&#39;]</code></pre>
+<ul>
+<li>字符串的转化：<code>maketrans(intab,outtab)</code>创建intab到outtab的映射；<code>translate(table,deletechars="")</code>根据table来进行转化，可以使用<code>deletechars</code>来指定删除的字符</li>
+</ul>
+<pre class="python"><code>s7 = &quot;abc has three characters&quot;
+
+intab = &quot;abc&quot;
+outtab = &quot;123&quot;
+
+transtab = s7.maketrans(intab,outtab)
+transtab ###ASCII对应
+&gt;&gt; {97: 49, 98: 50, 99: 51}
+s7.translate(transtab)
+&gt;&gt; &#39;123 h1s three 3h1r13ters&#39;</code></pre>
+</div>
+<div id="字符串格式化" class="section level3">
+<h3>字符串格式化</h3>
+<ul>
+<li>format 方法 在字符串中使用括号表示format的参数，进行替换；括号内的数字表示位置，字母表示参数名称</li>
+</ul>
+<pre class="python"><code>&quot;{1} is {0}&quot;.format(&quot;num&quot;,&quot;1&quot;)
+&gt;&gt; &#39;1 is num&#39;
+&quot;{second} is {first}&quot;.format(first = &quot;num&quot;, second = &quot;1&quot;)
+&gt;&gt; &#39;1 is num&#39;</code></pre>
+<ul>
+<li>字符串格式化符号</li>
+</ul>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228162350177.png" /></p>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228162434625.png" /></p>
+<ul>
+<li>f字符串：在需要格式化的字符串前面加上f或F，里面用大括号来代替变量</li>
+</ul>
+<pre class="python"><code>a = &quot;&#39;123&#39;&quot;
+b = &quot;&#39;cdf&#39;&quot;
+
+f&quot;{a} has the same length with {b}&quot;
+&gt;&gt; &quot;&#39;123&#39; has the same length with &#39;cdf&#39;&quot;</code></pre>
+</div>
+</div>
+<div id="字典" class="section level2">
+<h2>字典</h2>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/字典%20-%20坚果云_00.png" /></p>
+<div id="创建字典" class="section level3">
+<h3>创建字典</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228162934647.png" /></p>
+<pre class="python"><code>d1 = {&quot;a&quot;:1,&quot;b&quot;:2,&quot;c&quot;:3}
+print(d1,type(d1))
+&gt;&gt; {&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;c&#39;: 3} &lt;class &#39;dict&#39;&gt;</code></pre>
+<pre class="python"><code>##先创建空字典再填充
+d2 = dict()
+d2[&quot;a&quot;] = 1
+d2[&quot;b&quot;] = 2
+print(d2,type(d2))
+
+##根据可映射对象来创建
+&gt;&gt; {&#39;a&#39;: 1, &#39;b&#39;: 2} &lt;class &#39;dict&#39;&gt;
+o1 = [(&quot;a&quot;,1),(&quot;b&quot;,2)]
+o2 = ((&quot;c&quot;,1),(&quot;d&quot;,2))
+
+d3 = dict(o1)
+d4 = dict(o2)
+
+print(d3,type(d3))
+&gt;&gt; {&#39;a&#39;: 1, &#39;b&#39;: 2} &lt;class &#39;dict&#39;&gt;
+print(d4,type(d4))
+
+##根据关键字参数来创建
+&gt;&gt; {&#39;c&#39;: 1, &#39;d&#39;: 2} &lt;class &#39;dict&#39;&gt;
+d5 = dict(a=1,b=2)
+print(d5,type(d5))
+&gt;&gt; {&#39;a&#39;: 1, &#39;b&#39;: 2} &lt;class &#39;dict&#39;&gt;</code></pre>
+<p>还可以使用<code>fromkeys(seq,value)</code>方法来创建；以seq中的元素做键，value作为值(所有的键的值都是value，如果没有则为None)</p>
+<pre class="python"><code>seq = (&quot;a&quot;,&quot;b&quot;,&quot;c&quot;)
+dict.fromkeys(seq)
+&gt;&gt; {&#39;a&#39;: None, &#39;b&#39;: None, &#39;c&#39;: None}
+dict.fromkeys(seq,10)
+&gt;&gt; {&#39;a&#39;: 10, &#39;b&#39;: 10, &#39;c&#39;: 10}
+dict.fromkeys(seq,(1,2,3)) ##不会分开匹配
+&gt;&gt; {&#39;a&#39;: (1, 2, 3), &#39;b&#39;: (1, 2, 3), &#39;c&#39;: (1, 2, 3)}</code></pre>
+</div>
+<div id="访问字典" class="section level3">
+<h3>访问字典</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228163808865.png" />
+<code>keys</code>方法返回一个可迭代对象(键)，可以使用<code>list()</code>来转化为列表</p>
+<pre class="python"><code>d5
+&gt;&gt; {&#39;a&#39;: 1, &#39;b&#39;: 2}
+d5.keys()
+&gt;&gt; dict_keys([&#39;a&#39;, &#39;b&#39;])
+type(d5.keys())
+&gt;&gt; &lt;class &#39;dict_keys&#39;&gt;
+list(d5.keys())
+&gt;&gt; [&#39;a&#39;, &#39;b&#39;]</code></pre>
+<p>同样的，<code>values</code>方法返回的是包含值的可迭代对象：</p>
+<pre class="python"><code>d5
+&gt;&gt; {&#39;a&#39;: 1, &#39;b&#39;: 2}
+d5.values()
+&gt;&gt; dict_values([1, 2])
+type(d5.values())
+&gt;&gt; &lt;class &#39;dict_values&#39;&gt;
+list(d5.values())
+&gt;&gt; [1, 2]</code></pre>
+<p><code>items</code>方法返回的是键值对元组构成的可迭代对象：</p>
+<pre class="python"><code>d5.items()
+&gt;&gt; dict_items([(&#39;a&#39;, 1), (&#39;b&#39;, 2)])
+type(d5.items())
+&gt;&gt; &lt;class &#39;dict_items&#39;&gt;
+list(d5.items())
+&gt;&gt; [(&#39;a&#39;, 1), (&#39;b&#39;, 2)]</code></pre>
+<p><code>get(key,default=None)</code>方法返回指定键(key)的值，如果没有找到则返回默认值(default)</p>
+<pre class="python"><code>d5.get(&quot;a&quot;)
+&gt;&gt; 1
+d5.get(&quot;c&quot;)##返回None 什么都没有
+
+d5.get(&quot;c&quot;,&quot;not in dict&quot;)
+&gt;&gt; &#39;not in dict&#39;</code></pre>
+</div>
+<div id="修改添加删除元素" class="section level3">
+<h3>修改,添加,删除元素</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228165518914.png" />
+<code>update(dict2)</code>方法将dict2中的键值对更新到字典中</p>
+<pre class="python"><code>d5
+&gt;&gt; {&#39;a&#39;: 1, &#39;b&#39;: 2}
+d5.update({&quot;a&quot;:4})
+d5
+&gt;&gt; {&#39;a&#39;: 4, &#39;b&#39;: 2}</code></pre>
+<p><code>setdefault(key,default=None)</code>方法和get类似，不过他如果没有找到键的话会添加键，并将值设为default(和get一样也会返回default值)</p>
+<pre class="python"><code>d5.setdefault(&quot;c&quot;,5)
+&gt;&gt; 5
+d5
+&gt;&gt; {&#39;a&#39;: 4, &#39;b&#39;: 2, &#39;c&#39;: 5}</code></pre>
+<p>删除元素有3种方法：<code>pop(key,default)</code>方法删除键(key)所对应的值并返回该值，如果key不存在则返回default；<code>del dict[key]</code>语句删除key对应的值；<code>clear</code>方法删除所有元素</p>
+<pre class="python"><code>d5.pop(&quot;a&quot;)
+&gt;&gt; 4
+d5
+&gt;&gt; {&#39;b&#39;: 2, &#39;c&#39;: 5}
+d5.pop(&quot;a&quot;,&quot;not in dict&quot;)
+&gt;&gt; &#39;not in dict&#39;
+del d5[&quot;b&quot;]
+d5
+&gt;&gt; {&#39;c&#39;: 5}
+d5.clear()
+d5
+&gt;&gt; {}</code></pre>
+</div>
+</div>
+<div id="集合" class="section level2">
+<h2>集合</h2>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/集合.nbmx%20-%20坚果云_00.png" /></p>
+<div id="集合的创建" class="section level3">
+<h3>集合的创建</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228185240284.png" /></p>
+<p>注意：在创建空集合的时候只能使用<code>set()</code>而不能使用<code>{}</code>，因为<code>{}</code>创建的是空字典</p>
+<pre class="python"><code>set1 = set()
+
+set1.add(&quot;a&quot;)
+set1
+&gt;&gt; {&#39;a&#39;}
+set1.add((&quot;a&quot;,&quot;b&quot;))
+set1
+
+###直接创建
+&gt;&gt; {(&#39;a&#39;, &#39;b&#39;), &#39;a&#39;}
+set2 = {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;a&quot;}
+set2
+
+###将列表/元组/字符串转化成集合
+&gt;&gt; {&#39;c&#39;, &#39;b&#39;, &#39;a&#39;}
+set(&quot;abc&quot;)
+&gt;&gt; {&#39;c&#39;, &#39;b&#39;, &#39;a&#39;}
+set((&quot;a&quot;,&quot;b&quot;,&quot;c&quot;))
+&gt;&gt; {&#39;c&#39;, &#39;b&#39;, &#39;a&#39;}
+set([&quot;a&quot;,1,2])
+&gt;&gt; {1, 2, &#39;a&#39;}</code></pre>
+</div>
+<div id="添加删除修改元素" class="section level3">
+<h3>添加,删除,修改元素</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228185911041.png" /></p>
+<pre class="python"><code>set3 = {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}
+set3
+&gt;&gt; {&#39;c&#39;, &#39;b&#39;, &#39;a&#39;}
+set3.add(&quot;d&quot;)
+set3
+&gt;&gt; {&#39;c&#39;, &#39;b&#39;, &#39;d&#39;, &#39;a&#39;}
+set3.add(&quot;a&quot;)##相同元素 不执行操作
+set3
+
+###update 更新集合 和前面讲的类似，不同的是集合中的元素唯一
+&gt;&gt; {&#39;c&#39;, &#39;b&#39;, &#39;d&#39;, &#39;a&#39;}
+set3.update(&quot;b&quot;,&quot;e&quot;)
+set3
+
+###remove移除指定元素
+&gt;&gt; {&#39;e&#39;, &#39;b&#39;, &#39;d&#39;, &#39;a&#39;, &#39;c&#39;}
+set3.remove(&quot;a&quot;)
+set3
+
+###discard也是移除元素，但是元素不存在不会报错
+&gt;&gt; {&#39;e&#39;, &#39;b&#39;, &#39;d&#39;, &#39;c&#39;}
+set3.remove(&quot;a&quot;)
+&gt;&gt; Error in py_call_impl(callable, dots$args, dots$keywords): KeyError: &#39;a&#39;
+&gt;&gt; 
+&gt;&gt; Detailed traceback: 
+&gt;&gt;   File &quot;&lt;string&gt;&quot;, line 1, in &lt;module&gt;
+set3.discard(&quot;a&quot;)
+
+set3
+
+###pop随机移除
+&gt;&gt; {&#39;e&#39;, &#39;b&#39;, &#39;d&#39;, &#39;c&#39;}
+set3.pop()
+&gt;&gt; &#39;e&#39;
+set3
+&gt;&gt; {&#39;b&#39;, &#39;d&#39;, &#39;c&#39;}</code></pre>
+</div>
+<div id="集合操作" class="section level3">
+<h3>集合操作</h3>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210228190454050.png" />
+<code>intersection(set1, set2)</code> 返回两个集合的交集,也可以使用<code>&amp;</code>,<code>intersection_update(set1, set2)</code>取交集并更新原来的集合(相当于将原来集合中不重叠的元素删除)</p>
+<pre class="python"><code>a = set(&quot;abcd&quot;)
+b = set(&quot;cdef&quot;)
+
+print(a,b,end=&quot;\n&quot;)
+&gt;&gt; {&#39;c&#39;, &#39;b&#39;, &#39;d&#39;, &#39;a&#39;} {&#39;c&#39;, &#39;f&#39;, &#39;e&#39;, &#39;d&#39;}
+a.intersection(b)
+&gt;&gt; {&#39;c&#39;, &#39;d&#39;}
+print(a,b,end=&quot;\n&quot;)##原来的集合没有改变
+&gt;&gt; {&#39;c&#39;, &#39;b&#39;, &#39;d&#39;, &#39;a&#39;} {&#39;c&#39;, &#39;f&#39;, &#39;e&#39;, &#39;d&#39;}
+a.intersection_update(b)
+print(a,b,end=&quot;\n&quot;)##原来的集合改变
+&gt;&gt; {&#39;c&#39;, &#39;d&#39;} {&#39;c&#39;, &#39;f&#39;, &#39;e&#39;, &#39;d&#39;}</code></pre>
+<p>union(set1, set2) 返回两个集合的并集,也可以使用<code>|</code></p>
+<pre class="python"><code>a.union(b)
+&gt;&gt; {&#39;f&#39;, &#39;e&#39;, &#39;d&#39;, &#39;c&#39;}
+a | b
+&gt;&gt; {&#39;f&#39;, &#39;e&#39;, &#39;d&#39;, &#39;c&#39;}</code></pre>
+<p>difference(set) 返回集合的差集,也可以使用<code>-</code>,difference_update(set)更改原来的集合</p>
+<pre class="python"><code>a.difference(b)
+&gt;&gt; set()
+b.difference(a)
+&gt;&gt; {&#39;f&#39;, &#39;e&#39;}
+a-b
+&gt;&gt; set()
+b-a
+&gt;&gt; {&#39;f&#39;, &#39;e&#39;}
+b.difference_update(a)
+print(a,b)
+&gt;&gt; {&#39;c&#39;, &#39;d&#39;} {&#39;f&#39;, &#39;e&#39;}</code></pre>
+<p>symmetric_difference(set)返回集合的异或，或者使用<code>^</code></p>
+<p>集合的异或指的是：(参考https://www.cnblogs.com/organic/p/5023038.html)下图绿色的部分</p>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/818872-20151206095708736-923889139.png" /></p>
+<pre class="python"><code>a = set(&quot;abcd&quot;)
+b = set(&quot;cdef&quot;)
+
+print(a,b,end=&quot;\n&quot;)
+&gt;&gt; {&#39;c&#39;, &#39;b&#39;, &#39;d&#39;, &#39;a&#39;} {&#39;c&#39;, &#39;f&#39;, &#39;e&#39;, &#39;d&#39;}
+a.symmetric_difference(b)
+&gt;&gt; {&#39;f&#39;, &#39;e&#39;, &#39;b&#39;, &#39;a&#39;}
+a.symmetric_difference_update(b)
+print(a,b,end=&quot;\n&quot;)
+&gt;&gt; {&#39;f&#39;, &#39;e&#39;, &#39;b&#39;, &#39;a&#39;} {&#39;c&#39;, &#39;f&#39;, &#39;e&#39;, &#39;d&#39;}</code></pre>
+<p>issubset(set)判断集合是否被set包含，也可以使用<code>&lt;=</code>;issuperset(set)判断集合是否包含set，也可以使用<code>&gt;=</code></p>
+<pre class="python"><code>c = set(&quot;ab&quot;)
+
+c.issubset(a)
+&gt;&gt; True
+c &lt;= a
+&gt;&gt; True
+a.issuperset(c)
+&gt;&gt; True
+a &gt;= c
+&gt;&gt; True</code></pre>
+<p>isdisjoint(set) 用于判断两个集合是不是不相交</p>
+<pre class="python"><code>a.isdisjoint(b)
+&gt;&gt; False</code></pre>
 </div>
 </div>
