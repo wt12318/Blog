@@ -333,6 +333,12 @@ $$
 加上这一项之后就会使得模型在训练的过程中尽量保持特征权重($\theta$)比较小                
 注意：在岭回归等正则化的模型中，训练时使用的损失函数与计算模型性能时用的指标不一定相同(在分类模型中更是如此)；另外在训练正则化的模型时，对特征一定要归一化
 
+下图，左边是线性回归使用岭正则化，右图是多项式回归使用岭正则化，展示了不同$\alpha$值时的情况：
+
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210301230247251.png)
+
+可以看到增加$\alpha$会是曲线更加平缓(减少了variance但是增加了bias)
+
 对于岭回归，和线性回归一样，可以使用normal equation的方法或者梯度下降的方法求解：
 
 ```{python}
@@ -363,5 +369,14 @@ $$
 所以岭回归的正则化项就是$\alpha 1/2(||w||_2)^2$,w是$\theta_1$到$\theta_n$的参数向量(特征权重)
 
 ### Lasso回归
+
+Lasso的全称为Least Absolute Shrinkage and Selection Operator ,和岭回归类似也是在损失函数后面加上一个正则化项，只不过Lasso加的是L1范数：
+$$
+J(\theta) = MSE(\theta) + \alpha\sum_{i=1}^n|\theta_i|
+$$
+
+
+
+
 
 

@@ -50,7 +50,7 @@ import matplotlib.pyplot as plt
 x = 2 * np.random.rand(100,1)
 y = 4 + 3 * x + np.random.randn(100,1)
 plt.plot(x, y, &quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000612B78E0&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000062B378E0&gt;]
 plt.xlabel(&quot;$x_1$&quot;, fontsize=18)
 &gt;&gt; Text(0.5, 0, &#39;$x_1$&#39;)
 plt.ylabel(&quot;$y$&quot;, rotation=0, fontsize=18)
@@ -64,20 +64,20 @@ plt.show()</code></pre>
 theta_best = np.linalg.inv(x_b.T.dot(x_b)).dot(x_b.T).dot(y)
 
 theta_best
-&gt;&gt; array([[4.04144181],
-&gt;&gt;        [2.93300647]])</code></pre>
+&gt;&gt; array([[4.2934393 ],
+&gt;&gt;        [2.85930621]])</code></pre>
 <p><code>np.c_</code>进行的是增加列的操作(R里面的cbind);<code>np.ones((100,1))</code>产生100行1列的矩阵，元素都是1;<code>np.linalg</code>是numpy中线性代数模块;<code>inv</code>是矩阵求逆方法;<code>T</code>是矩阵转置方法;<code>dot</code>是矩阵乘法</p>
 <p>现在我们使用计算出的<span class="math inline">\(\hat \theta\)</span>来预测：</p>
 <pre class="python"><code>x_new = np.array([[0],[2]])
 x_new_b = np.c_[np.ones((2,1)),x_new]
 y_pre = x_new_b.dot(theta_best)
 y_pre
-&gt;&gt; array([[4.04144181],
-&gt;&gt;        [9.90745474]])</code></pre>
+&gt;&gt; array([[ 4.2934393 ],
+&gt;&gt;        [10.01205171]])</code></pre>
 <pre class="python"><code>plt.plot(x_new,y_pre,&quot;r-&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000062EBF910&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000006316F910&gt;]
 plt.plot(x,y,&quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000062EBFD60&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000006316FD60&gt;]
 plt.axis([0,2,0,15])
 &gt;&gt; (0.0, 2.0, 0.0, 15.0)
 plt.show()</code></pre>
@@ -89,10 +89,10 @@ lin_reg = LinearRegression()
 lin_reg.fit(x,y)
 &gt;&gt; LinearRegression()
 lin_reg.intercept_, lin_reg.coef_
-&gt;&gt; (array([4.04144181]), array([[2.93300647]]))
+&gt;&gt; (array([4.2934393]), array([[2.85930621]]))
 lin_reg.predict(x_new)
-&gt;&gt; array([[4.04144181],
-&gt;&gt;        [9.90745474]])</code></pre>
+&gt;&gt; array([[ 4.2934393 ],
+&gt;&gt;        [10.01205171]])</code></pre>
 <p><code>LinearRegression</code>类是基于<code>scipy.linalg.lstsq</code>函数的，该函数是通过SVD进行计算pseudoinverse(<span class="math inline">\(X^+\)</span>)然后再计算<span class="math inline">\(\hat \theta = X^+y\)</span>,这样计算有两个好处：pseudoinverse的计算比直接计算矩阵的逆效率更高(why?)；当<span class="math inline">\(X^TX\)</span>不可逆的时候Normal Equation是无法计算的，而pseudoinverse是可以计算的</p>
 <p>计算Normal Equation的计算复杂度是比较大的(求矩阵的逆的计算复杂度为<span class="math inline">\(O(n^{2.4})\)</span>~<span class="math inline">\(O(n^{3})\)</span>,使用SVD方法的计算复杂度为<span class="math inline">\(O(n^2)\)</span>)</p>
 </div>
@@ -175,7 +175,7 @@ x = 6 * np.random.rand(m,1) - 3 ##均匀分布
 y = 0.5 * x**2 + x + 2 + np.random.randn(m,1)##正态分布
 
 plt.plot(x, y, &quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000644FD2E0&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000001307D310&gt;]
 plt.xlabel(&quot;$x_1$&quot;, fontsize=18)
 &gt;&gt; Text(0.5, 0, &#39;$x_1$&#39;)
 plt.ylabel(&quot;$y$&quot;, rotation=0, fontsize=18)
@@ -204,15 +204,15 @@ lin_reg.intercept_, lin_reg.coef_
 x_new_poly = poly_features.transform(x_new)
 y_new = lin_reg.predict(x_new_poly)
 plt.plot(x, y, &quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000645CB520&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000001314B580&gt;]
 plt.plot(x_new, y_new, &quot;r-&quot;, linewidth=2, label=&quot;Predictions&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000645CB910&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000001314B970&gt;]
 plt.xlabel(&quot;$x_1$&quot;, fontsize=18)
 &gt;&gt; Text(0.5, 0, &#39;$x_1$&#39;)
 plt.ylabel(&quot;$y$&quot;, rotation=0, fontsize=18)
 &gt;&gt; Text(0, 0.5, &#39;$y$&#39;)
 plt.legend(loc=&quot;upper left&quot;, fontsize=14)
-&gt;&gt; &lt;matplotlib.legend.Legend object at 0x00000000645CBD30&gt;
+&gt;&gt; &lt;matplotlib.legend.Legend object at 0x000000001314BD90&gt;
 plt.axis([-3, 3, 0, 10])
 &gt;&gt; (-3.0, 3.0, 0.0, 10.0)
 plt.show()</code></pre>
@@ -286,6 +286,9 @@ J(\theta) = MSE(\theta) + \alpha \frac{1}{2}\sum_{i=1}^{n}\theta_i^2
 \]</span>
 加上这一项之后就会使得模型在训练的过程中尽量保持特征权重(<span class="math inline">\(\theta\)</span>)比较小<br />
 注意：在岭回归等正则化的模型中，训练时使用的损失函数与计算模型性能时用的指标不一定相同(在分类模型中更是如此)；另外在训练正则化的模型时，对特征一定要归一化</p>
+<p>下图，左边是线性回归使用岭正则化，右图是多项式回归使用岭正则化，展示了不同<span class="math inline">\(\alpha\)</span>值时的情况：</p>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210301230247251.png" /></p>
+<p>可以看到增加<span class="math inline">\(\alpha\)</span>会是曲线更加平缓(减少了variance但是增加了bias)</p>
 <p>对于岭回归，和线性回归一样，可以使用normal equation的方法或者梯度下降的方法求解：</p>
 <pre class="python"><code>##Normal equation
 from sklearn.linear_model import Ridge
@@ -313,5 +316,9 @@ sgd_reg.predict([[1.5]])
 </div>
 <div id="lasso回归" class="section level3">
 <h3>Lasso回归</h3>
+<p>Lasso的全称为Least Absolute Shrinkage and Selection Operator ,和岭回归类似也是在损失函数后面加上一个正则化项，只不过Lasso加的是L1范数：
+<span class="math display">\[
+J(\theta) = MSE(\theta) + \alpha\sum_{i=1}^n|\theta_i|
+\]</span></p>
 </div>
 </div>
