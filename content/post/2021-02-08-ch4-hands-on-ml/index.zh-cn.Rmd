@@ -374,9 +374,53 @@ Lasso的全称为Least Absolute Shrinkage and Selection Operator ,和岭回归�
 $$
 J(\theta) = MSE(\theta) + \alpha\sum_{i=1}^n|\theta_i|
 $$
+lasso回归可以用来进行特征选择(why)
 
+上面那个损失函数在$\theta_i=0$的地方是不可微分的，但是可以通过将梯度向量替换成次梯度向量(subgradient vector)来解决这个问题：
+$$
+g(\theta,J)=\triangledown MSE(\theta)+ \alpha 	\left(               
+\begin{array}{cccc}
+ sign(\theta_1)\\
+ sign(\theta_2)\\
+ \vdots  \\
+ sign(\theta_n)
+\end{array}
+\right ) where \ sign(\theta_n)= \begin{cases}
+-1\ if\ \theta_i <0 \\
+0\ \ if\ \theta_i =0 \\
++1 \ if\ \theta_i >0 
+\end{cases}
+$$
 
+在Scikit-Learn中可以使用`Lasso`或者`SGDRegressor`(指定l1范数的惩罚项)：
 
+```{python}
+from sklearn.linear_model import Lasso
 
+lasso_reg = Lasso(alpha=0.1)
+lasso_reg.fit(x,y)
+lasso_reg.predict([[1.5]])
+
+sgd_lasso = SGDRegressor(penalty="l1")
+sgd_lasso.fit(x,y.ravel())
+sgd_lasso.predict([[1.5]])
+```
+
+### 弹性网络
+
+弹性网络(Elastic Net)是岭回归和lasso回归中间的“调和”，其正则化项是岭回归和lasso回归的正则化项的混合，可以通过$r$来控制混合的比例:
+$$
+J(\theta)=MSE(\theta)+r\alpha\sum_{i=1}^n|\theta_i|+\frac{1-r}{2}\alpha\sum_{i=1}^n\theta_i^2
+$$
+
+什么时候使用单独的线性回归，什么时候使用正则化的模型，这些正则化方法应该选哪个；一般来说要避免使用单独的线性回归，所以更多的情况下是使用正则化的模型，当我们知道特征中只有一部分是有用的，可以使用lasso或者弹性网络来选择变量；另外尽可能的使用弹性网络，因为**当特征的数量比训练样本的数量要多或者几个特征间相关性比较强时，lasso表现不稳定**
+
+sklearn中的`ElasticNet`可以用来建立弹性网络模型：
+```{python}
+from sklearn.linear_model import ElasticNet
+elastic_net = ElasticNet(alpha=0.1,l1_ratio=0.5)##l1_ratio指的是r
+elastic_net.fit(x,y)
+elastic_net.predict([[1.5]])
+```
 
 

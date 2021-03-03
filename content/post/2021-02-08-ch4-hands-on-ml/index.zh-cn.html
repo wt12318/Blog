@@ -50,7 +50,7 @@ import matplotlib.pyplot as plt
 x = 2 * np.random.rand(100,1)
 y = 4 + 3 * x + np.random.randn(100,1)
 plt.plot(x, y, &quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000062B378E0&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000612B78E0&gt;]
 plt.xlabel(&quot;$x_1$&quot;, fontsize=18)
 &gt;&gt; Text(0.5, 0, &#39;$x_1$&#39;)
 plt.ylabel(&quot;$y$&quot;, rotation=0, fontsize=18)
@@ -64,20 +64,20 @@ plt.show()</code></pre>
 theta_best = np.linalg.inv(x_b.T.dot(x_b)).dot(x_b.T).dot(y)
 
 theta_best
-&gt;&gt; array([[4.2934393 ],
-&gt;&gt;        [2.85930621]])</code></pre>
+&gt;&gt; array([[4.18717865],
+&gt;&gt;        [2.85755675]])</code></pre>
 <p><code>np.c_</code>进行的是增加列的操作(R里面的cbind);<code>np.ones((100,1))</code>产生100行1列的矩阵，元素都是1;<code>np.linalg</code>是numpy中线性代数模块;<code>inv</code>是矩阵求逆方法;<code>T</code>是矩阵转置方法;<code>dot</code>是矩阵乘法</p>
 <p>现在我们使用计算出的<span class="math inline">\(\hat \theta\)</span>来预测：</p>
 <pre class="python"><code>x_new = np.array([[0],[2]])
 x_new_b = np.c_[np.ones((2,1)),x_new]
 y_pre = x_new_b.dot(theta_best)
 y_pre
-&gt;&gt; array([[ 4.2934393 ],
-&gt;&gt;        [10.01205171]])</code></pre>
+&gt;&gt; array([[4.18717865],
+&gt;&gt;        [9.90229215]])</code></pre>
 <pre class="python"><code>plt.plot(x_new,y_pre,&quot;r-&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000006316F910&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000062EAF910&gt;]
 plt.plot(x,y,&quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000006316FD60&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000062EAFD60&gt;]
 plt.axis([0,2,0,15])
 &gt;&gt; (0.0, 2.0, 0.0, 15.0)
 plt.show()</code></pre>
@@ -89,10 +89,10 @@ lin_reg = LinearRegression()
 lin_reg.fit(x,y)
 &gt;&gt; LinearRegression()
 lin_reg.intercept_, lin_reg.coef_
-&gt;&gt; (array([4.2934393]), array([[2.85930621]]))
+&gt;&gt; (array([4.18717865]), array([[2.85755675]]))
 lin_reg.predict(x_new)
-&gt;&gt; array([[ 4.2934393 ],
-&gt;&gt;        [10.01205171]])</code></pre>
+&gt;&gt; array([[4.18717865],
+&gt;&gt;        [9.90229215]])</code></pre>
 <p><code>LinearRegression</code>类是基于<code>scipy.linalg.lstsq</code>函数的，该函数是通过SVD进行计算pseudoinverse(<span class="math inline">\(X^+\)</span>)然后再计算<span class="math inline">\(\hat \theta = X^+y\)</span>,这样计算有两个好处：pseudoinverse的计算比直接计算矩阵的逆效率更高(why?)；当<span class="math inline">\(X^TX\)</span>不可逆的时候Normal Equation是无法计算的，而pseudoinverse是可以计算的</p>
 <p>计算Normal Equation的计算复杂度是比较大的(求矩阵的逆的计算复杂度为<span class="math inline">\(O(n^{2.4})\)</span>~<span class="math inline">\(O(n^{3})\)</span>,使用SVD方法的计算复杂度为<span class="math inline">\(O(n^2)\)</span>)</p>
 </div>
@@ -175,7 +175,7 @@ x = 6 * np.random.rand(m,1) - 3 ##均匀分布
 y = 0.5 * x**2 + x + 2 + np.random.randn(m,1)##正态分布
 
 plt.plot(x, y, &quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000001307D310&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000644ED310&gt;]
 plt.xlabel(&quot;$x_1$&quot;, fontsize=18)
 &gt;&gt; Text(0.5, 0, &#39;$x_1$&#39;)
 plt.ylabel(&quot;$y$&quot;, rotation=0, fontsize=18)
@@ -204,15 +204,15 @@ lin_reg.intercept_, lin_reg.coef_
 x_new_poly = poly_features.transform(x_new)
 y_new = lin_reg.predict(x_new_poly)
 plt.plot(x, y, &quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000001314B580&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000645DB550&gt;]
 plt.plot(x_new, y_new, &quot;r-&quot;, linewidth=2, label=&quot;Predictions&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x000000001314B970&gt;]
+&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000645DB940&gt;]
 plt.xlabel(&quot;$x_1$&quot;, fontsize=18)
 &gt;&gt; Text(0.5, 0, &#39;$x_1$&#39;)
 plt.ylabel(&quot;$y$&quot;, rotation=0, fontsize=18)
 &gt;&gt; Text(0, 0.5, &#39;$y$&#39;)
 plt.legend(loc=&quot;upper left&quot;, fontsize=14)
-&gt;&gt; &lt;matplotlib.legend.Legend object at 0x000000001314BD90&gt;
+&gt;&gt; &lt;matplotlib.legend.Legend object at 0x00000000645DBD60&gt;
 plt.axis([-3, 3, 0, 10])
 &gt;&gt; (-3.0, 3.0, 0.0, 10.0)
 plt.show()</code></pre>
@@ -319,6 +319,50 @@ sgd_reg.predict([[1.5]])
 <p>Lasso的全称为Least Absolute Shrinkage and Selection Operator ,和岭回归类似也是在损失函数后面加上一个正则化项，只不过Lasso加的是L1范数：
 <span class="math display">\[
 J(\theta) = MSE(\theta) + \alpha\sum_{i=1}^n|\theta_i|
+\]</span>
+lasso回归可以用来进行特征选择(why)</p>
+<p>上面那个损失函数在<span class="math inline">\(\theta_i=0\)</span>的地方是不可微分的，但是可以通过将梯度向量替换成次梯度向量(subgradient vector)来解决这个问题：
+<span class="math display">\[
+g(\theta,J)=\triangledown MSE(\theta)+ \alpha   \left(               
+\begin{array}{cccc}
+ sign(\theta_1)\\
+ sign(\theta_2)\\
+ \vdots  \\
+ sign(\theta_n)
+\end{array}
+\right ) where \ sign(\theta_n)= \begin{cases}
+-1\ if\ \theta_i &lt;0 \\
+0\ \ if\ \theta_i =0 \\
++1 \ if\ \theta_i &gt;0 
+\end{cases}
 \]</span></p>
+<p>在Scikit-Learn中可以使用<code>Lasso</code>或者<code>SGDRegressor</code>(指定l1范数的惩罚项)：</p>
+<pre class="python"><code>from sklearn.linear_model import Lasso
+
+lasso_reg = Lasso(alpha=0.1)
+lasso_reg.fit(x,y)
+&gt;&gt; Lasso(alpha=0.1)
+lasso_reg.predict([[1.5]])
+&gt;&gt; array([4.52578706])
+sgd_lasso = SGDRegressor(penalty=&quot;l1&quot;)
+sgd_lasso.fit(x,y.ravel())
+&gt;&gt; SGDRegressor(penalty=&#39;l1&#39;)
+sgd_lasso.predict([[1.5]])
+&gt;&gt; array([4.57060493])</code></pre>
+</div>
+<div id="弹性网络" class="section level3">
+<h3>弹性网络</h3>
+<p>弹性网络(Elastic Net)是岭回归和lasso回归中间的“调和”，其正则化项是岭回归和lasso回归的正则化项的混合，可以通过<span class="math inline">\(r\)</span>来控制混合的比例:
+<span class="math display">\[
+J(\theta)=MSE(\theta)+r\alpha\sum_{i=1}^n|\theta_i|+\frac{1-r}{2}\alpha\sum_{i=1}^n\theta_i^2
+\]</span></p>
+<p>什么时候使用单独的线性回归，什么时候使用正则化的模型，这些正则化方法应该选哪个；一般来说要避免使用单独的线性回归，所以更多的情况下是使用正则化的模型，当我们知道特征中只有一部分是有用的，可以使用lasso或者弹性网络来选择变量；另外尽可能的使用弹性网络，因为<strong>当特征的数量比训练样本的数量要多或者几个特征间相关性比较强时，lasso表现不稳定</strong></p>
+<p>sklearn中的<code>ElasticNet</code>可以用来建立弹性网络模型：</p>
+<pre class="python"><code>from sklearn.linear_model import ElasticNet
+elastic_net = ElasticNet(alpha=0.1,l1_ratio=0.5)##l1_ratio指的是r
+elastic_net.fit(x,y)
+&gt;&gt; ElasticNet(alpha=0.1)
+elastic_net.predict([[1.5]])
+&gt;&gt; array([4.52788619])</code></pre>
 </div>
 </div>
