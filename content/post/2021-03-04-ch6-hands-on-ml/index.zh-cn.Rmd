@@ -1,0 +1,72 @@
+---
+title: 【Ch6】Hands on Machine Learning 决策树
+author: wutao
+date: '2021-03-04'
+slug: ch6_hands_on_ML
+categories:
+  - python
+  - reading notes
+tags:
+  - notes
+image : "image1.jpg"
+---
+
+```{r setup, include=FALSE,eval=TRUE}
+knitr::opts_chunk$set(collapse = TRUE,comment=">>",
+                      engine.path = list(python = 'C:\\Users\\16504\\AppData\\Local\\Programs\\Python\\Python38\\python.exe'))
+```
+
+决策树是一种多能的机器学习算法，可以处理分类，回归，甚至多输出问题(见第二章)
+
+参考资料：https://www.bilibili.com/video/BV1ut41197F6?from=search&seid=9344266940719140153
+
+https://www.bilibili.com/video/BV1ZK4y1b7Xt
+
+https://www.bilibili.com/video/BV1MA411J7wm
+
+李航统计学习
+
+## 训练和可视化决策树
+
+首先在iris数据集上训练一个决策树模型并可视化：
+
+```{python}
+from sklearn.datasets import load_iris
+from sklearn.tree import DecisionTreeClassifier
+from sklearn import tree
+from matplotlib import pyplot as plt
+
+iris = load_iris()
+x = iris.data[:,2:]##取petal length和width变量
+y = iris.target
+
+tree_clf = DecisionTreeClassifier(max_depth=2)
+tree_clf.fit(x,y)
+```
+
+Graphviz是一个开源的图（Graph）可视化软件，采用抽象的图和网络来表示结构化的信息。在数据科学领域，Graphviz的一个用途就是实现决策树可视化,因此我们需要使用`export_graphviz()`将树结构导出为一个`.dot`文件
+
+```{python}
+from sklearn.tree import export_graphviz
+from graphviz import Source
+
+export_graphviz(
+  tree_clf,
+  out_file="../test/iris_tree.dot",
+  feature_names=iris.feature_names[2:],
+  class_names=iris.target_names,
+  rounded=True,
+  filled=True,
+  special_characters=True
+)
+```
+
+然后需要下载[Graphviz](https://www.graphviz.org/download/),打开powershell：
+
+```{shell eval=FALSE}
+dot -Tpng iris_tree.dot -o iris_tree.png
+```
+
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/iris_tree.png)
+
+
