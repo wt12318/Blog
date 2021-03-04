@@ -50,11 +50,8 @@ import matplotlib.pyplot as plt
 x = 2 * np.random.rand(100,1)
 y = 4 + 3 * x + np.random.randn(100,1)
 plt.plot(x, y, &quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000612B78E0&gt;]
 plt.xlabel(&quot;$x_1$&quot;, fontsize=18)
-&gt;&gt; Text(0.5, 0, &#39;$x_1$&#39;)
 plt.ylabel(&quot;$y$&quot;, rotation=0, fontsize=18)
-&gt;&gt; Text(0, 0.5, &#39;$y$&#39;)
 plt.axis([0, 2, 0, 15])
 &gt;&gt; (0.0, 2.0, 0.0, 15.0)
 plt.show()</code></pre>
@@ -64,24 +61,22 @@ plt.show()</code></pre>
 theta_best = np.linalg.inv(x_b.T.dot(x_b)).dot(x_b.T).dot(y)
 
 theta_best
-&gt;&gt; array([[4.18717865],
-&gt;&gt;        [2.85755675]])</code></pre>
+&gt;&gt; array([[3.86784012],
+&gt;&gt;        [3.12164607]])</code></pre>
 <p><code>np.c_</code>进行的是增加列的操作(R里面的cbind);<code>np.ones((100,1))</code>产生100行1列的矩阵，元素都是1;<code>np.linalg</code>是numpy中线性代数模块;<code>inv</code>是矩阵求逆方法;<code>T</code>是矩阵转置方法;<code>dot</code>是矩阵乘法</p>
 <p>现在我们使用计算出的<span class="math inline">\(\hat \theta\)</span>来预测：</p>
 <pre class="python"><code>x_new = np.array([[0],[2]])
 x_new_b = np.c_[np.ones((2,1)),x_new]
 y_pre = x_new_b.dot(theta_best)
 y_pre
-&gt;&gt; array([[4.18717865],
-&gt;&gt;        [9.90229215]])</code></pre>
+&gt;&gt; array([[ 3.86784012],
+&gt;&gt;        [10.11113225]])</code></pre>
 <pre class="python"><code>plt.plot(x_new,y_pre,&quot;r-&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000062EAF910&gt;]
 plt.plot(x,y,&quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x0000000062EAFD60&gt;]
 plt.axis([0,2,0,15])
 &gt;&gt; (0.0, 2.0, 0.0, 15.0)
 plt.show()</code></pre>
-<p><img src="/post/2021-02-08-ch4-hands-on-ml/index.zh-cn_files/figure-html/unnamed-chunk-1-3.png" width="672" /></p>
+<p><img src="/post/2021-02-08-ch4-hands-on-ml/index.zh-cn_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <p>在Scikit-Learn中可以使用<code>LinearRegression</code>来方便的进行线性回归的计算：</p>
 <pre class="python"><code>from sklearn.linear_model import LinearRegression
 
@@ -89,10 +84,10 @@ lin_reg = LinearRegression()
 lin_reg.fit(x,y)
 &gt;&gt; LinearRegression()
 lin_reg.intercept_, lin_reg.coef_
-&gt;&gt; (array([4.18717865]), array([[2.85755675]]))
+&gt;&gt; (array([3.86784012]), array([[3.12164607]]))
 lin_reg.predict(x_new)
-&gt;&gt; array([[4.18717865],
-&gt;&gt;        [9.90229215]])</code></pre>
+&gt;&gt; array([[ 3.86784012],
+&gt;&gt;        [10.11113225]])</code></pre>
 <p><code>LinearRegression</code>类是基于<code>scipy.linalg.lstsq</code>函数的，该函数是通过SVD进行计算pseudoinverse(<span class="math inline">\(X^+\)</span>)然后再计算<span class="math inline">\(\hat \theta = X^+y\)</span>,这样计算有两个好处：pseudoinverse的计算比直接计算矩阵的逆效率更高(why?)；当<span class="math inline">\(X^TX\)</span>不可逆的时候Normal Equation是无法计算的，而pseudoinverse是可以计算的</p>
 <p>计算Normal Equation的计算复杂度是比较大的(求矩阵的逆的计算复杂度为<span class="math inline">\(O(n^{2.4})\)</span>~<span class="math inline">\(O(n^{3})\)</span>,使用SVD方法的计算复杂度为<span class="math inline">\(O(n^2)\)</span>)</p>
 </div>
@@ -175,15 +170,12 @@ x = 6 * np.random.rand(m,1) - 3 ##均匀分布
 y = 0.5 * x**2 + x + 2 + np.random.randn(m,1)##正态分布
 
 plt.plot(x, y, &quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000644ED310&gt;]
 plt.xlabel(&quot;$x_1$&quot;, fontsize=18)
-&gt;&gt; Text(0.5, 0, &#39;$x_1$&#39;)
 plt.ylabel(&quot;$y$&quot;, rotation=0, fontsize=18)
-&gt;&gt; Text(0, 0.5, &#39;$y$&#39;)
 plt.axis([-3, 3, 0, 10])
 &gt;&gt; (-3.0, 3.0, 0.0, 10.0)
 plt.show()</code></pre>
-<p><img src="/post/2021-02-08-ch4-hands-on-ml/index.zh-cn_files/figure-html/unnamed-chunk-1-5.png" width="672" /></p>
+<p><img src="/post/2021-02-08-ch4-hands-on-ml/index.zh-cn_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <p>使用<code>PolynomialFeatures</code>类将特征加上平方后作为新的特征：</p>
 <pre class="python"><code>from sklearn.preprocessing import PolynomialFeatures
 poly_features = PolynomialFeatures(degree=2,include_bias=False)
@@ -204,19 +196,14 @@ lin_reg.intercept_, lin_reg.coef_
 x_new_poly = poly_features.transform(x_new)
 y_new = lin_reg.predict(x_new_poly)
 plt.plot(x, y, &quot;b.&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000645DB550&gt;]
 plt.plot(x_new, y_new, &quot;r-&quot;, linewidth=2, label=&quot;Predictions&quot;)
-&gt;&gt; [&lt;matplotlib.lines.Line2D object at 0x00000000645DB940&gt;]
 plt.xlabel(&quot;$x_1$&quot;, fontsize=18)
-&gt;&gt; Text(0.5, 0, &#39;$x_1$&#39;)
 plt.ylabel(&quot;$y$&quot;, rotation=0, fontsize=18)
-&gt;&gt; Text(0, 0.5, &#39;$y$&#39;)
 plt.legend(loc=&quot;upper left&quot;, fontsize=14)
-&gt;&gt; &lt;matplotlib.legend.Legend object at 0x00000000645DBD60&gt;
 plt.axis([-3, 3, 0, 10])
 &gt;&gt; (-3.0, 3.0, 0.0, 10.0)
 plt.show()</code></pre>
-<p><img src="/post/2021-02-08-ch4-hands-on-ml/index.zh-cn_files/figure-html/unnamed-chunk-1-7.png" width="672" /></p>
+<p><img src="/post/2021-02-08-ch4-hands-on-ml/index.zh-cn_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>需要注意的是：<code>PolynomialFeatures(degree=d)</code>会将原来的n个特征变成<span class="math inline">\(\frac{(n+d)!}{d!n!}\)</span>个特征；比如有两个特征a,b,经过自由度为3的PolynomialFeatures转化后就有10个特征(包括1),要注意特征爆炸的问题</p>
 </div>
 <div id="学习曲线" class="section level2">
@@ -250,7 +237,7 @@ plot_learning_curves(lin_reg,x,y)
 plt.axis([0, 80, 0, 3]) 
 &gt;&gt; (0.0, 80.0, 0.0, 3.0)
 plt.show()        </code></pre>
-<p><img src="/post/2021-02-08-ch4-hands-on-ml/index.zh-cn_files/figure-html/unnamed-chunk-1-9.png" width="672" /></p>
+<p><img src="/post/2021-02-08-ch4-hands-on-ml/index.zh-cn_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <p>当只有一两个训练数据的时候，模型拟合的非常好，同时由于训练集较少，泛化能力较弱所以在验证集中表现不好；当训练集逐渐增大，一方面由于数据的噪音，另一方面因为模型是线性的，而数据不是线性的，所以模型在训练集上的误差上升，但是由于训练集增多，泛化能力会一定程度的上升，所以在验证集上的误差降低，最终两者都到达一个平台</p>
 <p>这个学习曲线是一个典型的欠拟合的模型的特征：<strong>两个曲线都到达一个平台；并且两者比较接近，都比较高</strong></p>
 <p>接下来看一下有10个自由度的多项式回归模型的学习曲线：</p>
@@ -265,7 +252,7 @@ plot_learning_curves(polynomial_regression, x, y)
 plt.axis([0, 80, 0, 3])
 &gt;&gt; (0.0, 80.0, 0.0, 3.0)
 plt.show()           </code></pre>
-<p><img src="/post/2021-02-08-ch4-hands-on-ml/index.zh-cn_files/figure-html/unnamed-chunk-1-11.png" width="672" /></p>
+<p><img src="/post/2021-02-08-ch4-hands-on-ml/index.zh-cn_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>这个学习曲线也有两个特征：</p>
 <ul>
 <li>在训练集上的误差比上面的线性回归模型要低</li>
@@ -363,6 +350,65 @@ elastic_net = ElasticNet(alpha=0.1,l1_ratio=0.5)##l1_ratio指的是r
 elastic_net.fit(x,y)
 &gt;&gt; ElasticNet(alpha=0.1)
 elastic_net.predict([[1.5]])
-&gt;&gt; array([4.52788619])</code></pre>
+
+##也可以使用SGDRgressor
+&gt;&gt; array([4.52788619])
+sgd_elastic = SGDRegressor(penalty=&quot;elasticnet&quot;,alpha=0.1,l1_ratio=0.5)
+sgd_elastic.fit(x,y.ravel())
+&gt;&gt; SGDRegressor(alpha=0.1, l1_ratio=0.5, penalty=&#39;elasticnet&#39;)
+sgd_elastic.predict([[1.5]])
+&gt;&gt; array([4.51766322])</code></pre>
+</div>
+<div id="early-stopping" class="section level3">
+<h3>Early Stopping</h3>
+<p>另一个方法去正则化迭代的学习算法(如梯度下降)是：当验证集误差达到最小值的时候就停止训练；这种方法叫做<strong>early stopping</strong>,如下图所示：</p>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210304083008485.png" /></p>
+<p>当学习算法学习的时候，在训练集和验证集上的误差都会降低，但是一段时间之后会出现在验证集上的误差上升的情况，这意味着模型开始过拟合，因此最好在未过拟合之前就停止训练模型(验证集误差最低)</p>
+<p>注意：在随机梯度下降或者小批次梯度下降中，曲线不会像上图那样平滑，因此很难判定是否达到最小值；一个解决方法就是：当训练一段时间之后，验证集的误差一直比最小值要高(每一个epoch之后就把验证集误差和之前所有的误差比较，看看是不是最小值，进行迭代更新)，就停止训练，记录下验证集误差最小时的模型参数</p>
+<pre class="python"><code>##data
+np.random.seed(42)
+m = 100
+X = 6 * np.random.rand(m, 1) - 3
+y = 2 + X + 0.5 * X**2 + np.random.randn(m, 1)
+
+X_train, X_val, y_train, y_val = train_test_split(X[:50], y[:50].ravel(), test_size=0.5, random_state=10)</code></pre>
+<pre class="python"><code>from copy import deepcopy
+from sklearn.preprocessing import StandardScaler
+
+##数据预处理
+poly_scaler = Pipeline([
+        (&quot;poly_features&quot;, PolynomialFeatures(degree=90, include_bias=False)),
+        (&quot;std_scaler&quot;, StandardScaler())
+    ])
+
+X_train_poly_scaled = poly_scaler.fit_transform(X_train)
+X_val_poly_scaled = poly_scaler.transform(X_val)
+
+sgd_reg = SGDRegressor(max_iter=1, tol=-np.infty, warm_start=True,
+                       penalty=None, learning_rate=&quot;constant&quot;, eta0=0.0005, random_state=42)
+
+minimum_val_error = float(&quot;inf&quot;)
+best_epoch = None
+best_model = None
+for epoch in range(1000):
+    sgd_reg.fit(X_train_poly_scaled, y_train)  # continues where it left off
+    y_val_predict = sgd_reg.predict(X_val_poly_scaled)
+    val_error = mean_squared_error(y_val, y_val_predict)
+    if val_error &lt; minimum_val_error:
+        minimum_val_error = val_error
+        best_epoch = epoch
+        best_model = deepcopy(sgd_reg)</code></pre>
+<pre class="python"><code>best_epoch
+&gt;&gt; 239
+minimum_val_error
+&gt;&gt; 1.3513110512453865</code></pre>
+<p>首先预处理步骤对数据进行多项式转化，然后进行归一化；SGDRegressor参数中设置max_iter=1意思是每次训练只进行一个epoch(因为后面显式地进行epoch的迭代),tol前面讲过(如果在某一个epoch上损失函数下降小于tol的数值，则训练停止),warm_start=T表示调用fit时会使用上次训练得到的模型参数作为初始值继续进行训练(热启动),random_state表示当对每个新的epoch都会进行shuffle(默认)时取的随机种子数，来保证结果可重复</p>
+</div>
+</div>
+<div id="逻辑回归" class="section level2">
+<h2>逻辑回归</h2>
+<p>逻辑回归可以用来估计某个实例属于某一类别的概率，如果概率大于50%，则认为该实例属于该类(1),否则不属于该类(0),因此是二分类的分类器</p>
+<div id="估计概率" class="section level3">
+<h3>估计概率</h3>
 </div>
 </div>
