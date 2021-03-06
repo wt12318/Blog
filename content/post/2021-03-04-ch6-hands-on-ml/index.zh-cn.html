@@ -51,3 +51,13 @@ export_graphviz(
 <pre class="shell"><code>dot -Tpng iris_tree.dot -o iris_tree.png</code></pre>
 <p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/iris_tree.png" /></p>
 </div>
+<div id="预测" class="section level2">
+<h2>预测</h2>
+<p>决策树做预测比较简单：就是从根节点(最上面)往下进行判断；如果现在有一个iris花,从根节点开始(深度为0)，花瓣长度是否小于2.45,如果小于2.45就是往左走，此时左边的节点没有子节点，这样的节点叫做叶子节点，然后就可以判断该花是setosa类</p>
+<p>从上图可以看到每个节点都有一些属性(gini,samples,value,class)：</p>
+<ul>
+<li>samples属性：该节点所应用的样本数量，比如在深度为1的右侧节点中有100个训练实例的花瓣长度大于2.45，在这100个里面又有54个实例的花瓣宽度小于1.75(深度为2的左节点)</li>
+<li>value属性：该节点中每个类型有多少训练实例；比如最底部的右侧节点的value表示46个实例中有0个Iris setosa,1个 Iris versicolor,和45个Iris virginica</li>
+<li>gini属性：该节点的不纯度，如果该节点所有的实例都是一个类，那么gini就是0，表示纯的；比如深度为1的左节点，全部是setosa</li>
+</ul>
+</div>
