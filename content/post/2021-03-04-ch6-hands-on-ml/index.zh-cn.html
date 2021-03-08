@@ -113,7 +113,11 @@ C_{\alpha}(T)=\sum_{t=1}^{|T|}N_tH_t(T)+\alpha|T|\\
 H_t(T)=-\sum_k^K\frac{N_{tk}}{N_t}log2\frac{N_{tk}}{N_t}
 \]</span>
 其中t表示叶节点,|T|是叶节点个数,<span class="math inline">\(N_t\)</span>是t叶节点的样本数,<span class="math inline">\(N_{tk}\)</span>是t叶节点中k类样本的个数</p>
-<p>将损失函数的第一项记作<span class="math inline">\(C(T)\)</span>,损失函数可以写成：</p>
+<p>将损失函数的第一项记作<span class="math inline">\(C(T)\)</span>,</p>
+<p><span class="math display">\[
+C(T)=\sum_{t=1}^{|T|}N_tH_t(T)=-\sum_{t=1}^{|T|}N_t\sum_k^K\frac{N_{tk}}{N_t}log2\frac{N_{tk}}{N_t}=-\sum_{t=1}^{|T|}\sum_k^KN_{tk}log2\frac{N_{tk}}{N_t}
+\]</span></p>
+<p>损失函数可以写成：</p>
 <p><span class="math display">\[
 C_{\alpha}(T)=C(T)+\alpha|T|
 \]</span></p>
@@ -154,6 +158,16 @@ Gini(D,A)=\frac{|C_1|}{|D|}Gini(D_1)+\frac{|C_2|}{|D|}Gini(D_2)
 </ul>
 <p>该决策树的决策边界可以用下图来表示：</p>
 <p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210306162213679.png" /></p>
+<div id="估计类的概率" class="section level5">
+<h5>估计类的概率</h5>
+<p>决策树也可以估计一个实例属于特定类的概率<br />
+首先找到这个实例所属的叶子节点，然后返回该节点中各类的训练实例所占的比例作为这个实例属于各个类的概率；比如现在有一个鸢尾花花瓣长5cm宽1.5cm，那么它所属的叶子节点为深度为2的左节点，所以决策树输出概率为:0%是setosa,90.7%(49/54)是versicolor,9.3%(5/54)是virginica，如果让决策树来预测这个花的类别，会输出class 1 (versicolor):</p>
+<pre class="python"><code>tree_clf.predict_proba([[5,1.5]])
+&gt;&gt; array([[0.        , 0.90740741, 0.09259259]])
+tree_clf.predict([[5,1.5]])
+&gt;&gt; array([1])</code></pre>
+<p>需要注意的是：落在某个叶子节点中的所有实例的输出概率都是一样的(上面决策边界图里面同一个长方形里面的点)</p>
+</div>
 </div>
 <div id="回归" class="section level4">
 <h4>回归</h4>
@@ -210,16 +224,18 @@ export_graphviz(
 </div>
 <div id="剪枝" class="section level4">
 <h4>剪枝</h4>
+<p>CART算法的剪枝和一般的决策树剪枝不同</p>
+<p>CART算法对决策树的每一个内部节点都进行剪枝，生成一个子决策树的序列；假设树的结构如下：</p>
+<center>
+<p><img src="https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210308223511075.png" /></p>
+</center>
+<p>设整体树为<span class="math inline">\(T_0\)</span>,对<span class="math inline">\(T_0\)</span>的任意内部节点t,可以计算以t为单节点的树的损失函数<span class="math inline">\(C_\alpha(t)\)</span>和以t为根节点的子树的损失函数<span class="math inline">\(C_\alpha(T_t)\)</span>;当<span class="math inline">\(\alpha\)</span>充分小的时候<span class="math inline">\(C_\alpha(T_t)&lt;C_\alpha(t)\)</span>(对树的复杂度惩罚较小,较复杂的树能够较好的拟合数据，因此损失函数较低)，当<span class="math inline">\(\alpha\)</span>增大到某一个值的时候,两者相等，也就是单节点的树和子树的损失函数值相等,但是单节点的树比较简单,因此取单节点树,即对树进行剪枝</p>
+<p>因此对<span class="math inline">\(T_0\)</span>中的每个内部节点都可以计算一个两者相等时的<span class="math inline">\(\alpha\)</span>值：</p>
+<p><span class="math display">\[
+g(t) = \frac{C(t)-C_\alpha(T_t)}{|T_t|-1}
+\]</span>
+表示剪枝后整体损失函数减少的程度</p>
+<p>剪枝过程就为：对<span class="math inline">\(T_0\)</span>的每个内部节点计算<span class="math inline">\(g(t_i)\)</span>,剪去有最小<span class="math inline">\(g(t_i)\)</span>的内部节点的子节点，得到子树<span class="math inline">\(T_i\)</span>,然后继续对<span class="math inline">\(T_i\)</span>进行剪枝,直到根节点；对于得到的子树序列<span class="math inline">\(T_1,T_2,...,T_n\)</span>通过交叉验证的方法选择最优的子树<span class="math inline">\(T_\alpha\)</span>,此时也可以确定相应的<span class="math inline">\(\alpha\)</span>了</p>
 </div>
 </div>
-</div>
-<div id="估计类的概率" class="section level2">
-<h2>估计类的概率</h2>
-<p>决策树也可以估计一个实例属于特定类的概率<br />
-首先找到这个实例所属的叶子节点，然后返回该节点中各类的训练实例所占的比例作为这个实例属于各个类的概率；比如现在有一个鸢尾花花瓣长5cm宽1.5cm，那么它所属的叶子节点为深度为2的左节点，所以决策树输出概率为:0%是setosa,90.7%(49/54)是versicolor,9.3%(5/54)是virginica，如果让决策树来预测这个花的类别，会输出class 1 (versicolor):</p>
-<pre class="python"><code>tree_clf.predict_proba([[5,1.5]])
-&gt;&gt; array([[0.        , 0.90740741, 0.09259259]])
-tree_clf.predict([[5,1.5]])
-&gt;&gt; array([1])</code></pre>
-<p>需要注意的是：落在某个叶子节点中的所有实例的输出概率都是一样的(最开始那个决策边界图里面同一个长方形里面的点)</p>
 </div>
