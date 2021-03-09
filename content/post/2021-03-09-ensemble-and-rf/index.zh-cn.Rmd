@@ -1,0 +1,28 @@
+---
+title: 集成学习
+author: wutao
+date: '2021-03-09'
+slug: ensemble_and_rf
+categories:
+  - reading notes
+tags:
+  - notes
+  - python
+image : "em.png"
+---
+
+```{r setup2, include=FALSE,eval=TRUE}
+knitr::opts_chunk$set(collapse = TRUE,comment=">>",
+                      engine.path = list(python = 'C:\\Users\\lenovo\\AppData\\Local\\Programs\\Python\\Python39\\python.exe'))
+```
+
+集成学习就是将一系列的预测器按照某种方式聚合在一起，从而期望结果比单个预测器的效果要好；比如我们可以在训练集的不同的随机选取子集上训练一系列的决策树分类器，然后获取所有树的预测，对于某一个实例，将其多数分类器预测的结果作为最终的预测结果(这种集成学习方法也叫做随机森林)
+
+## Voting Classifiers
+
+上面那个例子就是一个多数表决分类器( majority-vote classifier)，更一般的说就是在训练集上训练多个不同的模型，最后对某个实例的预测是基于所有模型预测值的"投票结果"来决定，多数表决分类器又叫硬投票分类器(hard voting classifier)：
+
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210309170505986.png)
+
+为什么集成学习比单个的(弱)学习器的效果要好？可以从下面这个例子来理解：
+

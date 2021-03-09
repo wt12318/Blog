@@ -237,5 +237,19 @@ g(t) = \frac{C(t)-C_\alpha(T_t)}{|T_t|-1}
 表示剪枝后整体损失函数减少的程度</p>
 <p>剪枝过程就为：对<span class="math inline">\(T_0\)</span>的每个内部节点计算<span class="math inline">\(g(t_i)\)</span>,剪去有最小<span class="math inline">\(g(t_i)\)</span>的内部节点的子节点，得到子树<span class="math inline">\(T_i\)</span>,然后继续对<span class="math inline">\(T_i\)</span>进行剪枝,直到根节点；对于得到的子树序列<span class="math inline">\(T_1,T_2,...,T_n\)</span>通过交叉验证的方法选择最优的子树<span class="math inline">\(T_\alpha\)</span>,此时也可以确定相应的<span class="math inline">\(\alpha\)</span>了</p>
 </div>
+<div id="sci-kit-learn中的剪枝参数" class="section level4">
+<h4>Sci-kit learn中的剪枝参数</h4>
+<p><a href="https://scikit-learn.org/stable/modules/tree.html#minimal-cost-complexity-pruning" class="uri">https://scikit-learn.org/stable/modules/tree.html#minimal-cost-complexity-pruning</a></p>
+<p><a href="https://towardsdatascience.com/how-to-tune-a-decision-tree-f03721801680" class="uri">https://towardsdatascience.com/how-to-tune-a-decision-tree-f03721801680</a></p>
 </div>
+</div>
+</div>
+<div id="其他参数" class="section level2">
+<h2>其他参数</h2>
+<p>上面已经用过了<code>DecisionTreeRegressor</code>和<code>DecisionTreeClassifier</code>类的中的一些参数(max_depth,random_state);现在来看一下其他的参数</p>
+<ul>
+<li><code>criterion</code>:可选gini或者entropy；表示不纯度的衡量指标</li>
+<li><code>random_state</code>:随机种子数，Sci-kit learn在选择最优的split的时候，并不是选择所有的特征，而是随机选择一部分特征(数量由<code>max_features</code>来控制)，从中选择不纯度指标最优的特征进行分割，因此具有“随机化”</li>
+<li><code>splitter</code>: 有两个选项：<code>best</code>和<code>random</code>;两者在对每个feature选择阈值来分割时有区别：<code>best</code>是使用不纯度指标来评估每个可能的阈值，从而找到最优的切分点，而<code>random</code>是利用一个均匀随机抽样的函数(函数输入是特征的最小值,最大值和上面提到的random_state，也就是说依据均匀分布在相应特征的取值范围内随机选一个值作为分割点)；因此<strong>使用<code>random</code>参数带来的随机化可以在一定程度上减少过拟合</strong></li>
+</ul>
 </div>
