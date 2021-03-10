@@ -11,20 +11,17 @@ tags:
 image : "image1.jpg"
 ---
 
-```{r setup, include=FALSE,eval=TRUE}
+```{r setup, include=FALSE,eval=FALSE}
 knitr::opts_chunk$set(collapse = TRUE,comment=">>",
                       engine.path = list(python = 'C:\\Users\\16504\\AppData\\Local\\Programs\\Python\\Python38\\python.exe'))
 ```
 
+```{r setup2, include=FALSE,eval=TRUE}
+knitr::opts_chunk$set(collapse = TRUE,comment=">>",
+                      engine.path = list(python = 'C:\\Users\\lenovo\\AppData\\Local\\Programs\\Python\\Python39\\python.exe'))
+```
+
 决策树是一种多能的机器学习算法，可以处理分类，回归，甚至多输出问题(见第二章)
-
-参考资料：https://www.bilibili.com/video/BV1ut41197F6?from=search&seid=9344266940719140153
-
-https://www.bilibili.com/video/BV1ZK4y1b7Xt
-
-https://www.bilibili.com/video/BV1MA411J7wm
-
-李航统计学习
 
 ## 训练和可视化决策树
 
@@ -326,15 +323,36 @@ $$
 
 #### Sci-kit learn中的剪枝参数
 
-https://scikit-learn.org/stable/modules/tree.html#minimal-cost-complexity-pruning
+上面所讲的剪枝方法称为后剪枝(post pruning),即在树构建好了之后再去进行修剪;与之对应的是预剪枝,也就是在构建树的过程中限制树的生长来减少过拟合
 
-https://towardsdatascience.com/how-to-tune-a-decision-tree-f03721801680
+Sci-kit learn提供了一些**预剪枝**的参数：
+
+- `max_depth` int, default=None;树的最大深度
+- `min_samples_split`和`min_samples_leaf` int/float 如果是整数,则表示绝对数量;如果是浮点数,则表示占样本总数的比例;`min_samples_split`为内部节点进行切割所需的最小样本数,`min_samples_leaf`为切割后形成的叶节点内所含的最小样本数
+- `min_weight_fraction_leaf`：该参数一般和`class_weight`参数一起使用,主要解决不平衡的样本问题(某一类或几类比其他的类占比要大得多);对于不平衡的样本可以使用`class_weight`指定权重(使用字典指定类的权重{class_label: weight}或者直接用`balance`表示自动平衡各类),然后使用`min_weight_fraction_leaf`来指定在每个叶节点所必须的最小权重比例(占总权重)
+- `max_feature`:随机选择max_feature数量的特征进行最优化,有多种选择，具体可以参考官网
+- `min_impurity_decrease`: 设定不纯度下降的最小值，只有大于设定阈值的分割才会发生
+
+Sci-kit learn使用的**后剪枝策略**就是上面讲的CART的剪枝算法,提供的参数为`ccp_alpha`;上面提到剪枝过程是逐次选择最小$g(t_i)$的内部节点进行剪枝,因此我们所选择的$g(t_i)$是逐渐增大的，**当$g(t_i)$大于`ccp_alpha`的时候就停止剪枝**
 
 ## 其他参数
 
-上面已经用过了`DecisionTreeRegressor`和`DecisionTreeClassifier`类的中的一些参数(max_depth,random_state);现在来看一下其他的参数
+上面已经用过了`DecisionTreeRegressor`和`DecisionTreeClassifier`类的中的一些参数,现在来看一下其他的参数
 
 - `criterion`:可选gini或者entropy；表示不纯度的衡量指标
 - `random_state`:随机种子数，Sci-kit learn在选择最优的split的时候，并不是选择所有的特征，而是随机选择一部分特征(数量由`max_features`来控制)，从中选择不纯度指标最优的特征进行分割，因此具有“随机化”
 - `splitter`: 有两个选项：`best`和`random`;两者在对每个feature选择阈值来分割时有区别：`best`是使用不纯度指标来评估每个可能的阈值，从而找到最优的切分点，而`random`是利用一个均匀随机抽样的函数(函数输入是特征的最小值,最大值和上面提到的random_state，也就是说依据均匀分布在相应特征的取值范围内随机选一个值作为分割点)；因此**使用`random`参数带来的随机化可以在一定程度上减少过拟合**
 
+### 参考资料
+
+https://www.bilibili.com/video/BV1ut41197F6?from=search&seid=9344266940719140153
+
+https://www.bilibili.com/video/BV1ZK4y1b7Xt
+
+https://www.bilibili.com/video/BV1MA411J7wm
+
+https://towardsdatascience.com/how-to-tune-a-decision-tree-f03721801680
+
+李航统计学习
+
+Sci-Kit learn 官网教程
