@@ -256,6 +256,9 @@ g(t) = \frac{C(t)-C_\alpha(T_t)}{|T_t|-1}
 <li><code>random_state</code>:随机种子数，Sci-kit learn在选择最优的split的时候，并不是选择所有的特征，而是随机选择一部分特征(数量由<code>max_features</code>来控制)，从中选择不纯度指标最优的特征进行分割，因此具有“随机化”</li>
 <li><code>splitter</code>: 有两个选项：<code>best</code>和<code>random</code>;两者在对每个feature选择阈值来分割时有区别：<code>best</code>是使用不纯度指标来评估每个可能的阈值，从而找到最优的切分点，而<code>random</code>是利用一个均匀随机抽样的函数(函数输入是特征的最小值,最大值和上面提到的random_state，也就是说依据均匀分布在相应特征的取值范围内随机选一个值作为分割点)；因此<strong>使用<code>random</code>参数带来的随机化可以在一定程度上减少过拟合</strong></li>
 </ul>
+</div>
+<div id="实例" class="section level2">
+<h2>实例</h2>
 <div id="参考资料" class="section level3">
 <h3>参考资料</h3>
 <p><a href="https://www.bilibili.com/video/BV1ut41197F6?from=search&amp;seid=9344266940719140153" class="uri">https://www.bilibili.com/video/BV1ut41197F6?from=search&amp;seid=9344266940719140153</a></p>

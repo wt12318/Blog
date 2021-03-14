@@ -1,0 +1,15 @@
+---
+title: 支持向量机(SVM)
+author: wutao
+date: '2021-03-12'
+slug: svm
+categories:
+  - reading notes
+  - python
+tags:
+  - notes
+  - python
+  - ML
+image : "image1.jpg"
+---
+
