@@ -13,7 +13,7 @@ image : "snakemake.png"
 
 创建一个`snakemake_tutorial`目录,并下载示例数据：
 
-```{bash}
+```bash
 wget https://github.com/snakemake/snakemake-tutorial-data/archive/v5.24.1.tar.gz
 
 tar --wildcards -xf snakemake-tutorial-data-5.24.1.tar.gz --strip 1 "*/data" "*/environment.yaml"
@@ -43,7 +43,7 @@ tar --wildcards -xf snakemake-tutorial-data-5.24.1.tar.gz --strip 1 "*/data" "*/
 
 其中`environment.yaml`文件是用来创建所需的`conda`环境:
 
-```{bash}
+```bash
 cat environment.yaml
 
 channels:
@@ -63,7 +63,7 @@ dependencies:
 
 使用该配置文件创建`snakemake-tutorial`的环境(使用mamba代替conda来加速下载)：
 
-```{bash}
+```bash
 mamba env create --name snakemake-tutorial --file environment.yaml
 
 conda activate snakemake-tutorial
@@ -83,7 +83,7 @@ conda activate snakemake-tutorial
 
 创建一个`Snakefile`文件,写上下面的规则：
 
-```{python}
+```python
 rule bwa_map:
     input:
         "data/genome.fa",
@@ -98,7 +98,7 @@ rule bwa_map:
 
 接下来可以执行这个流程：
 
-```
+```bash
 snakemake --cores 1 
 
 Building DAG of jobs...
@@ -151,7 +151,7 @@ tree .
 
 也可以使用`-n`或者`--dry-run`参数使snakemake显示执行的”计划“(没有真正的执行流程);使用`-p`参数来打印需要执行的命令：
 
-```{bash}
+```bash
 snakemake -np
 
 Building DAG of jobs...
@@ -178,7 +178,7 @@ This was a dry-run (flag -n). The order of jobs does not reflect the order of ex
 
 上面的规则只能对单个样本`data/samples/A.fastq`适用,在snakemake中可以使用通配符(wildcard)来扩展规则的适用范围：
 
-```
+```bash
 rule bwa_map:
     input:
         "data/genome.fa",
@@ -191,7 +191,7 @@ rule bwa_map:
 
 `Snakemake`会将`output`中的`{sample}`替换成一个合适的值,并且将`input`中的`{sample}`也替换成同样的值,我们在运行流程就需要指定输出文件的名称(这样snakemake才知道如何替换通配符)：
 
-```
+```bash
 snakemake -np mapped_reads/B.bam
 
 Building DAG of jobs...
@@ -217,7 +217,7 @@ This was a dry-run (flag -n). The order of jobs does not reflect the order of ex
 这个时候snakemake就将`{sample}`替换成`B`了       
 也可以同时生成多个文件：
 
-```
+```bash
 snakemake -np mapped_reads/A.bam mapped_reads/B.bam
 ##或snakemake -np mapped_reads/{A,B}.bam
 
@@ -255,7 +255,7 @@ This was a dry-run (flag -n). The order of jobs does not reflect the order of ex
 
 接下来需要使用`samtools`中的`sort`命令来对BAM文件进行排序,将下面的规则写到刚才的`bwa_map`规则的下面：
 
-```
+```bash
 rule samtools_sort:
     input:
         "mapped_reads/{sample}.bam"
