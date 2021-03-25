@@ -26,7 +26,7 @@ export PATH="/public/slst/home/wutao2/software/annovar:$PATH"
 
 下载注释所需的参考文件,这里下载的是`hg38的refgene`：
 
-![Screenshot 2021-03-24 134702](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/Screenshot 2021-03-24 134702.png)
+![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210325085447536.png)
 
 ```bash
 perl annotate_variation.pl --downdb --webfrom annovar --buildver hg38 refGene ~/software/annovar/humandb/
