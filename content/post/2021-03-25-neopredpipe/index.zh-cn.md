@@ -162,7 +162,24 @@ Post Processing Options:
                         Default=True.
 ```
 
+该软件的输入文件有：
+
+- VCF文件：可以是单区域测序也可以是多区域测序
+- hla文件：hla文件的格式如下
+
+  
+  | Patient | HLA-A_1 | HLA-A_2 | HLA-B_1 | HLA-B_2 | HLA-C_1 | HLA-C_2 |
+  |  --- |  --- |  --- |  --- |  --- |  --- |  ---  |
+  | test1 | hla_a_31_01_02 | hla_a_02_01_80 | hla_b_40_01_02 | hla_b_50_01_01 | hla_c_03_04_20 | hla_c_06_02_01_02 |
+  | test2 | hla_a_01_01_01_01 | NA | hla_b_07_02_01 | NA | hla_c_01_02_01 | NA |
+
+    Patient名称要和vcf文件的名称相匹配；制表符分割；可以不要列名,但是顺序要匹配；当两个位点预测的HLA是一样的时候(A1和A2,B1和B2,C1和C2),需要用NA代替
+    
+- 表达文件：在-x参数后指定,制表符分割,第一列是gene id第二列是表达值;支持的id有：Ensembl gene ID, Ensembl transcript ID, RefSeq transcript ID, UCSC transcript ID
+
+
 使用测试数据进行测试(该软件提供的测试数据的参考基因组是`hg19`,因此将上面配置文件中的`gene_table`和`gene_fasta`改成`hg19`的)：
+
 
 ```sh
 NeoPredPipe.py --preponly -I ~/software/NeoPredPipe/Example/input_vcfs -H   ~/software/NeoPredPipe/Example/HLAtypes/hlatypes.txt -o ./test/ -n TestRun -c 1 2 -E 8 9 10
