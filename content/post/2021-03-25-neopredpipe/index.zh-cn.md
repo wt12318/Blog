@@ -294,6 +294,10 @@ INFO: Complete
 > - **BindLevel**: (SB: strong binder, WB: weak binder). The peptide will be identified as a strong binder if the % Rank is below the specified threshold for the strong binders, by default 0.5%. The peptide will be identified as a weak binder if the % Rank is above the threshold of the strong binders but below the specified threshold for the weak binders, by default 2%.
 > - **Novelty**: Binary value for indicating if the epitope is novel (1) or exists in the reference proteome (0). *Only present if -m flag is set to perform peptide matching in postprocessing*.
 
+## Recognition Potential
+
+在预测新抗原之后,该工具还可以根据2017 nature文章的方法计算neoantigen recognition potential
+
 ## 注意事项
 
 - `-c`参数的含义：
@@ -301,3 +305,10 @@ INFO: Complete
   ![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210324145740028.png)`-c`参数表示从`FORMAT`列往后第几列是需要关注的(一般是tumor列);在单区域测序的样本中可以不指定
 
 - 如果有表达数据,表达数据的`gene id`如果是`Ensembl gene ID`(也就是`ENSG`开头),要去掉版本号(小数点后的数字),因为该软件进行ID转化时使用的文件[mart_table_hg38_unique.txt](https://github.com/MathOnco/NeoPredPipe/blob/master/mart_table_hg38_unique.txt) 时不带版本号的
+
+- HLA的格式需要是像HLA-A03:01这样的
+- 输出的列：注意netMHCpan的版本
+  ![](https://picgo-wutao.oss-cn-shanghai.aliyuncs.com/img/image-20210326124059938.png)
+  
+
+
